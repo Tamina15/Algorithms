@@ -128,7 +128,7 @@ public class QuadTree {
 
     static class Panel extends JPanel {
 
-        int panelWidth = 1900;
+        int panelWidth = 800;
         int panelHeight = 800;
         Random random = new Random();
         int n = 1000;
@@ -170,7 +170,7 @@ public class QuadTree {
             for (Point.Double f : found) {
                 g2d.drawLine((int) f.x, (int) f.y, (int) f.x, (int) f.y);
             }
-            g2d.drawString("time: " + (e - s)*1.0/1_000_000 + "ms", 10, 10);
+            g2d.drawString("time: " + (e - s) * 1.0 / 1_000_000 + "ms", 10, 10);
             g2d.dispose();
             g.dispose();
         }
@@ -225,8 +225,6 @@ public class QuadTree {
         public static double delta = 0;
         public static boolean updating;
         public static BufferedImage image;
-
-        ;
         Panel panel;
 
         Frame() {
