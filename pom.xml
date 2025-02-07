@@ -8,6 +8,15 @@
     <modules>
         <module>LeetCode</module>
         <module>Algorithm</module>
+        <module>FlockingSimulation</module>
+        <module>QuadTree</module>
+        <module>MultiSourceBFS</module>
+        <module>OpenSimplexNoise</module>
+        <module>../PixelSort</module>
+        <module>../Sort</module>
+        <module>../Rug</module>
+        <module>CellularAutomata</module>
+        <module>Graphic</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

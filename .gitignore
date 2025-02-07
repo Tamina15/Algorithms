@@ -24,3 +24,8 @@ hs_err_pid*
 replay_pid*
 /Algorithm/target/
 /LeetCode/target/
+/FlockingSimulation/target/
+/MultiSourceBFS/target/
+/OpenSimplexNoise/target/
+/Graphic/target/
+/CellularAutomata/target/

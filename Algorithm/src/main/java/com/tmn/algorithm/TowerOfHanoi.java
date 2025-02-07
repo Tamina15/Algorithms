@@ -1,4 +1,4 @@
-package com.tmn.leetcode;
+package com.tmn.algorithm;
 
 public class TowerOfHanoi {
 

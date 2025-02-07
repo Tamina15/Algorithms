@@ -6,11 +6,11 @@
         <artifactId>Algorithms</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>Algorithm</artifactId>
+    <artifactId>CellularAutomata</artifactId>
     <packaging>jar</packaging>
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <exec.mainClass>com.tmn.algorithm.Algorithm</exec.mainClass>
+        <maven.compiler.source>22</maven.compiler.source>
+        <maven.compiler.target>22</maven.compiler.target>
+        <exec.mainClass>com.tmn.cellularautomata.Main</exec.mainClass>
     </properties>
 </project>
