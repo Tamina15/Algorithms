@@ -2,8 +2,10 @@ package com.tmn.cellularautomata;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
+import java.util.Random;
 
 public class CellularAutomata {
 
@@ -27,13 +29,17 @@ public class CellularAutomata {
         this(arrayLength, null, null);
     }
 
+    public CellularAutomata(int arrayLength, Integer width, Integer height) {
+        this(arrayLength, width, height, null);
+    }
+
     public CellularAutomata(int arrayLength, int[] intitial) {
         this(arrayLength, null, null, intitial);
     }
 
     public CellularAutomata(int arrayLength, Integer width, Integer height, int[] intitial) {
-        this.width = width == null ? arrayLength : width;
-        this.height = height == null ? arrayLength : height;
+        this.width = (width != null) ? width : arrayLength;
+        this.height = (height != null) ? height : arrayLength;
 
         initialCells = new int[arrayLength];
         nexts = new int[arrayLength];
@@ -75,29 +81,59 @@ public class CellularAutomata {
     }
 
     public static int[] toIntArray(String binary) {
-        int[] array = binary.chars().map((operand) -> operand == 48 /* '0' = 48 */ ? 0 : 1).toArray();
+        int[] array = binary.chars().map((operand) -> operand - 48 /* '0' = 48 */).toArray();
         return array;
     }
 
-    public void draw(Graphics2D g2d) {
+    public void draw(Graphics2D g2d, int offsetX, int offsetY) {
+        AffineTransform at = g2d.getTransform();
+
+        g2d.translate(offsetX, offsetY);
         g2d.drawImage(image, 0, 0, width, height, null);
-        Color c = g2d.getColor();
+        g2d.setColor(Color.RED);
+        g2d.drawLine(cI, currentCol, cI, currentCol);
         g2d.setColor(Color.GREEN);
         g2d.drawString(Arrays.toString(patternArray) + "", width, 10);
-        g2d.setColor(c);
+
+        g2d.setTransform(at);
+    }
+
+    public void draw(Graphics2D g2d) {
+        draw(g2d, 0, 0);
     }
 
     byte neightbors = 3;
-    int pattern = 256, states = 1 << neightbors;
+    int pattern = 73, states = 1 << neightbors;
     int[] patternArray = toIntArray(toBinary(pattern, states));
+
+    int cI = 0;
+
+    public void update(int time) {
+        for (int i = 0; i < time; i++) {
+            if (currentCol >= image.getHeight()) {
+                return;
+            }
+            if (cI < cells.length) {
+                neighbor_N(cI);
+                cI++;
+            } else {
+                cI = 0;
+                currentCol++;
+                int[] temp = cells;
+                cells = nexts;
+                nexts = temp;
+            }
+        }
+    }
 
     public void update() {
         if (currentCol >= image.getHeight()) {
-            restart();
+//            restart();
+//            restartRandom();
             return;
         }
         for (int i = 0; i < cells.length; i++) {
-            doSth1(i);
+            neighbor_N(i);
         }
         currentCol++;
         int[] temp = cells;
@@ -105,7 +141,7 @@ public class CellularAutomata {
         nexts = temp;
     }
 
-    private void doSth(int i) {
+    private void neighbor_3(int i) {
         int left = (i == 0) ? 0 : cells[i - 1];
         int current = cells[i];
         int right = (i == cells.length - 1) ? 0 : cells[i + 1];
@@ -116,7 +152,12 @@ public class CellularAutomata {
         }
     }
 
-    private void doSth1(int i) {
+    /**
+     * Unfinished
+     *
+     * @param i
+     */
+    protected void neighbor_N(int i) {
         int value = 0;
         for (int j = neightbors - 1; j >= 0; j--) {
             int index = i - j + neightbors / 2;
@@ -134,7 +175,7 @@ public class CellularAutomata {
         }
     }
 
-    private void setPixel(int x, int y, int color) {
+    protected void setPixel(int x, int y, int color) {
         int pos = 0;
         pixel[pos++] = (color >> 16 & 0xff);
         pixel[pos++] = (color >> 8 & 0xff);
@@ -142,9 +183,27 @@ public class CellularAutomata {
         image.getRaster().setPixel(x, y, pixel);
     }
 
-    private void restart() {
-        pattern = (pattern + 1);
+    protected void restartNext() {
+        restart(pattern + 1);
+    }
+
+    protected void restart(int p) {
+        pattern = p;
         patternArray = toIntArray(toBinary(pattern, states));
+        restart();
+    }
+
+    protected void restartRandom() {
+        restart();
+        pattern = (pattern - 1);
+        patternArray = toIntArray(toBinary(pattern, states));
+        Random r = new Random();
+        for (int i = 0; i < cells.length; i++) {
+            cells[i] = r.nextInt(2);
+        }
+    }
+
+    protected void restart() {
         Graphics2D g2d = (Graphics2D) image.getGraphics();
         g2d.setColor(Color.black);
         g2d.fillRect(0, 1, image.getWidth(), image.getHeight());
@@ -153,7 +212,9 @@ public class CellularAutomata {
             cells[i] = 0;
             nexts[i] = 0;
         }
+        cI = 0;
         currentCol = 1;
         cells = Arrays.copyOf(initialCells, initialCells.length);
     }
+
 }
