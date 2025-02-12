@@ -7,10 +7,17 @@ import java.util.Arrays;
 
 public class CellularAutomata {
 
-    private int width, height;
+    protected int width, height;
     BufferedImage image;
     int currentCol;
-    int[] startCells, cells, nexts, pixel;
+    int[] initialCells, cells, nexts;
+    static int white = Color.WHITE.getRGB();
+
+    /**
+     * Represents one pixel.
+     * [ red, green, blue ]
+     */
+    int[] pixel;
 
     public CellularAutomata() {
         this(0, null, null);
@@ -28,32 +35,27 @@ public class CellularAutomata {
         this.width = width == null ? arrayLength : width;
         this.height = height == null ? arrayLength : height;
 
-        startCells = new int[arrayLength];
+        initialCells = new int[arrayLength];
         nexts = new int[arrayLength];
 
-        image = new BufferedImage(arrayLength, arrayLength, 1);
+        image = new BufferedImage(arrayLength, arrayLength, BufferedImage.TYPE_INT_RGB);
         pixel = new int[3];
 
         currentCol = 1;
 
         if (intitial != null) {
             for (int i = 0; i < intitial.length; i++) {
-                set(startCells, intitial[i], 1);
+                set(initialCells, intitial[i], 1);
             }
         } else {
-            set(startCells, startCells.length / 2, 1);
+            set(initialCells, initialCells.length / 2, 1);
         }
 
-        cells = Arrays.copyOf(startCells, startCells.length);
-    }
-
-    public CellularAutomata(int arrayLength, Integer width, Integer height) {
-        this(arrayLength, width, height, null);
+        cells = Arrays.copyOf(initialCells, initialCells.length);
     }
 
     private void set(int[] array, int x, int value) {
-        array[x] = value;
-        setPixel(x, 0, Integer.MAX_VALUE);
+        set(array, x, 0, value, white);
     }
 
     private void set(int[] array, int x, int y, int value, int color) {
@@ -110,7 +112,7 @@ public class CellularAutomata {
         int p = 7 - ((left << 2) + (current << 1) + right);
         nexts[i] = patternArray[p];
         if (nexts[i] == 1) {
-            setPixel(i, currentCol, Integer.MAX_VALUE);
+            setPixel(i, currentCol, white);
         }
     }
 
@@ -128,7 +130,7 @@ public class CellularAutomata {
         value = states - 1 - value;
         nexts[i] = patternArray[value];
         if (nexts[i] == 1) {
-            setPixel(i, currentCol, Integer.MAX_VALUE);
+            setPixel(i, currentCol, white);
         }
     }
 
@@ -152,6 +154,6 @@ public class CellularAutomata {
             nexts[i] = 0;
         }
         currentCol = 1;
-        cells = Arrays.copyOf(startCells, startCells.length);
+        cells = Arrays.copyOf(initialCells, initialCells.length);
     }
 }
