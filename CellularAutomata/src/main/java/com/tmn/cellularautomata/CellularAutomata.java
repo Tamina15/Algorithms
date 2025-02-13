@@ -217,4 +217,27 @@ public class CellularAutomata {
         cells = Arrays.copyOf(initialCells, initialCells.length);
     }
 
+    protected void clearImage() {
+        Graphics2D g2d = (Graphics2D) image.getGraphics();
+        g2d.setColor(Color.black);
+        g2d.fillRect(0, 1, image.getWidth(), image.getHeight());
+        g2d.dispose();
+    }
+
+    protected void clearLine(int col) {
+        col = col % image.getHeight();
+        int black = Color.black.getRGB();
+        for (int i = 0; i < cells.length; i++) {
+            setPixel(i, col, black);
+        }
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
 }
