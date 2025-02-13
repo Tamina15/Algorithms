@@ -31,7 +31,7 @@ public class WrappedCellularAutomata extends CellularAutomata {
             int c = cells[index];
             value += c << j;
         }
-        value = states - 1 - value;
+        value = numberOfStates - 1 - value;
         nexts[i] = patternArray[value];
         if (nexts[i] == 1) {
             setPixel(i, currentCol, Integer.MAX_VALUE);

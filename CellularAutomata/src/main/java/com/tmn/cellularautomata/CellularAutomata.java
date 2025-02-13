@@ -9,46 +9,57 @@ import java.util.Random;
 
 public class CellularAutomata {
 
+    /**
+     * Values to scale the {@code image}
+     */
     protected int width, height;
+
+    /**
+     * The image represents the 2D grid.
+     * <p/>
+     * Each pixel represents 1 cell.
+     * Scale the image by using {@code width} and {@code height}
+     * <p/>
+     * Use to replace {@code Graphics.drawLine} for performance
+     */
     BufferedImage image;
-    int currentCol;
+
+    int currentCol = 1;
+
     int[] initialCells, cells, nexts;
     static int white = Color.WHITE.getRGB();
 
     /**
-     * Represents one pixel.
-     * [ red, green, blue ]
+     * Represents one pixel as [red, green, blue]
      */
     int[] pixel;
+
+    Option option;
 
     public CellularAutomata() {
         this(0, null, null);
     }
 
-    public CellularAutomata(int arrayLength) {
-        this(arrayLength, null, null);
+    public CellularAutomata(int cellsLength) {
+        this(cellsLength, null, null);
     }
 
-    public CellularAutomata(int arrayLength, Integer width, Integer height) {
-        this(arrayLength, width, height, null);
+    public CellularAutomata(int cellsLength, Integer width, Integer height) {
+        this(cellsLength, width, height, null);
     }
 
-    public CellularAutomata(int arrayLength, int[] intitial) {
-        this(arrayLength, null, null, intitial);
+    public CellularAutomata(int cellsLength, int[] intitial) {
+        this(cellsLength, null, null, intitial);
     }
 
-    public CellularAutomata(int arrayLength, Integer width, Integer height, int[] intitial) {
-        this.width = (width != null) ? width : arrayLength;
-        this.height = (height != null) ? height : arrayLength;
+    public CellularAutomata(int cellsLength, Integer width, Integer height, int[] intitial) {
+        this.width = (width != null) ? width : cellsLength;
+        this.height = (height != null) ? height : cellsLength;
 
-        initialCells = new int[arrayLength];
-        nexts = new int[arrayLength];
-
-        image = new BufferedImage(arrayLength, arrayLength, BufferedImage.TYPE_INT_RGB);
+        image = new BufferedImage(cellsLength, cellsLength, BufferedImage.TYPE_INT_RGB);
         pixel = new int[3];
 
-        currentCol = 1;
-
+        initialCells = new int[cellsLength];
         if (intitial != null) {
             for (int i = 0; i < intitial.length; i++) {
                 set(initialCells, intitial[i], 1);
@@ -58,31 +69,7 @@ public class CellularAutomata {
         }
 
         cells = Arrays.copyOf(initialCells, initialCells.length);
-    }
-
-    private void set(int[] array, int x, int value) {
-        set(array, x, 0, value, white);
-    }
-
-    private void set(int[] array, int x, int y, int value, int color) {
-        array[x] = value;
-        setPixel(x, y, color);
-    }
-
-    public static String toBinary(int number, byte exponent) {
-        if (exponent < 0 || exponent > 31) {
-            return "0";
-        }
-        return toBinary(number, 1 << exponent);
-    }
-
-    public static String toBinary(int number, int length) {
-        return String.format("%" + length + "s", Integer.toBinaryString(number)).replace(' ', '0');
-    }
-
-    public static int[] toIntArray(String binary) {
-        int[] array = binary.chars().map((operand) -> operand - 48 /* '0' = 48 */).toArray();
-        return array;
+        nexts = new int[cellsLength];
     }
 
     public void draw(Graphics2D g2d, int offsetX, int offsetY) {
@@ -103,10 +90,11 @@ public class CellularAutomata {
     }
 
     byte neightbors = 3;
-    int pattern = 73, states = 1 << neightbors;
-    int[] patternArray = toIntArray(toBinary(pattern, states));
+    int pattern = 150, numberOfStates = 1 << neightbors;
+    int[] patternArray = Utils.toBinaryArray(pattern, numberOfStates);
+    int[] reversedPatternArray = Utils.newReversedArray(patternArray);
 
-    int cI = 0;
+    private int cI = 0;
 
     public void update(int time) {
         for (int i = 0; i < time; i++) {
@@ -173,6 +161,15 @@ public class CellularAutomata {
         if (nexts[i] == 1) {
             setPixel(i, currentCol, white);
         }
+    }
+
+    private void set(int[] array, int x, int value) {
+        set(array, x, 0, value, white);
+    }
+
+    private void set(int[] array, int x, int y, int value, int color) {
+        array[x] = value;
+        setPixel(x, y, color);
     }
 
     protected void setPixel(int x, int y, int color) {
