@@ -77,10 +77,6 @@ public class CellularAutomata {
 
         g2d.translate(offsetX, offsetY);
         g2d.drawImage(image, 0, 0, width, height, null);
-        g2d.setColor(Color.RED);
-        g2d.drawLine(cI, currentCol, cI, currentCol);
-        g2d.setColor(Color.GREEN);
-        g2d.drawString(Arrays.toString(patternArray) + "", width, 10);
 
         g2d.setTransform(at);
     }
@@ -116,10 +112,9 @@ public class CellularAutomata {
 
     public void update() {
         if (currentCol >= image.getHeight()) {
-//            restart();
-//            restartRandom();
             return;
         }
+        clearLine(currentCol);
         for (int i = 0; i < cells.length; i++) {
             neighbor_N(i);
         }
@@ -129,35 +124,28 @@ public class CellularAutomata {
         nexts = temp;
     }
 
-    private void neighbor_3(int i) {
-        int left = (i == 0) ? 0 : cells[i - 1];
-        int current = cells[i];
-        int right = (i == cells.length - 1) ? 0 : cells[i + 1];
-        int p = 7 - ((left << 2) + (current << 1) + right);
-        nexts[i] = patternArray[p];
+    protected void neighbor_N(int i) {
+        int value = 0;
+        for (int j = neightbors - 1; j >= 0; j--) {
+            int index = i - j + neightbors / 2;
+            int c = index < 0 || index >= cells.length ? 0 : cells[index];
+            value += c << j;
+        }
+        value = numberOfStates - 1 - value;
+        nexts[i] = patternArray[value];
         if (nexts[i] == 1) {
             setPixel(i, currentCol, white);
         }
     }
 
-    /**
-     * Unfinished
-     *
-     * @param i
-     */
-    protected void neighbor_N(int i) {
+    protected void neighbor_N2(int i) {
         int value = 0;
         for (int j = neightbors - 1; j >= 0; j--) {
             int index = i - j + neightbors / 2;
-            if (index < 0 || index >= cells.length) {
-                value += 0 << j;
-            } else {
-                int c = cells[i - j + neightbors / 2];
-                value += c << j;
-            }
+            int c = index < 0 || index >= cells.length ? 0 : cells[index];
+            value += c << j;
         }
-        value = states - 1 - value;
-        nexts[i] = patternArray[value];
+        nexts[i] = reversedPatternArray[value];
         if (nexts[i] == 1) {
             setPixel(i, currentCol, white);
         }
