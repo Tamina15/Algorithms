@@ -1,5 +1,7 @@
-package com.tmn.cellularautomata;
+package com.tmn.cellularautomata.GUI;
 
+import com.tmn.cellularautomata.CellularAutomata;
+import com.tmn.cellularautomata.WrappedCellularAutomata;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -65,9 +67,9 @@ public class Panel extends JPanel {
                 zoomFactor /= 1.1;
             }
         });
-        
+
         init();
-        
+
         JTextField textField = new JTextField();
         textField.setPreferredSize(new Dimension(100, 30));
         textField.setBackground(Color.white);
@@ -94,14 +96,14 @@ public class Panel extends JPanel {
     }
 
     private void init() {
-        int length = width / 2;
-        int[] initital = new int[length];
+        int length = width;
+        int[] initital = new int[100];
         Random r = new Random();
         for (int i = 0; i < initital.length; i++) {
             initital[i] = r.nextInt(length);
         }
 //        ca = new CellularAutomata(100, width, height);
-//        ca = new CellularAutomata(length);
+//        ca = new CellularAutomata(length, width, height);
         ca = new CellularAutomata(length, width / 2, height, initital);
         wca = new WrappedCellularAutomata(length, width / 2, height, initital);
     }
@@ -116,7 +118,8 @@ public class Panel extends JPanel {
 
         // draw here
         ca.draw(g2d);
-        wca.draw(g2d, ca.width + 15, 0);
+//        wca.draw(g2d);
+        wca.draw(g2d, ca.getWidth() + 15, 0);
         ///////////////
 
         g2d.setColor(Color.red);

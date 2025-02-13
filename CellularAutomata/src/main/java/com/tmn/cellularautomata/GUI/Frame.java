@@ -1,4 +1,4 @@
-package com.tmn.cellularautomata;
+package com.tmn.cellularautomata.GUI;
 
 import javax.swing.JFrame;
 

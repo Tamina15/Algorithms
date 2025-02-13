@@ -1,4 +1,4 @@
-package com.tmn.cellularautomata;
+package com.tmn.cellularautomata.GUI;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.Consumer;
@@ -26,7 +26,7 @@ public class Main {
             p.fps = cps;
         }));
 
-        Thread.startVirtualThread(loop(f, 60, () -> {
+        Thread.startVirtualThread(loop(f, 120, () -> {
             p.update();
         }, (Integer cps) -> {
             p.ups = cps;
