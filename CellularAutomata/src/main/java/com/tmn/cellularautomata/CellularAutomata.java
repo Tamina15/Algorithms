@@ -10,23 +10,42 @@ import java.util.Random;
 public class CellularAutomata {
 
     /**
-     * Values to scale the {@code image}
+     * The appearance width of the grid
      */
-    protected int width, height;
+    protected int width;
 
     /**
-     * The image represents the 2D grid.
-     * <p/>
+     * The appearance height of the grid
+     */
+    protected int height;
+
+    /**
+     * The image representing the 2D grid of cells.
      * Each pixel represents 1 cell.
-     * Scale the image by using {@code width} and {@code height}
-     * <p/>
      * Use to replace {@code Graphics.drawLine} for performance
      */
     BufferedImage image;
 
     int currentCol = 1;
 
-    int[] initialCells, cells, nexts;
+    /**
+     * The initial state of the grid
+     */
+    int[] initialCells;
+
+    /**
+     * The current state of the grid
+     */
+    int[] cells;
+
+    /**
+     * The next state of the grid
+     */
+    int[] nexts;
+
+    /**
+     * The color WHITE in integer value.
+     */
     static int white = Color.WHITE.getRGB();
 
     /**
@@ -34,24 +53,58 @@ public class CellularAutomata {
      */
     int[] pixel;
 
+    /**
+     * Control parameters
+     */
     Option option;
 
+    /**
+     * Create an empty grid
+     */
     public CellularAutomata() {
         this(0, null, null);
     }
 
+    /**
+     * Create a grid with a number of cell and default dimension.
+     *
+     * @param cellsLength the number of cell
+     */
     public CellularAutomata(int cellsLength) {
         this(cellsLength, null, null);
     }
 
+    /**
+     * Create a grid with a number of cell that will render to {@code width} and {@code height} values.
+     *
+     * @param cellsLength the number of cell
+     * @param width       The appearance width of the grid
+     * @param height      The appearance height of the grid
+     */
     public CellularAutomata(int cellsLength, Integer width, Integer height) {
         this(cellsLength, width, height, null);
     }
 
+    /**
+     * Create a grid with a number of cells and an initial condition
+     * that will render to {@code width} and {@code height} values.
+     *
+     * @param cellsLength the number of cell
+     * @param intitial    array contains index of 'on' cell
+     */
     public CellularAutomata(int cellsLength, int[] intitial) {
         this(cellsLength, null, null, intitial);
     }
 
+    /**
+     * Create a grid with a number of cells and an initial condition
+     * that will render {@code width} and {@code height} long.
+     *
+     * @param cellsLength the number of cell
+     * @param width       The appearance width of the grid
+     * @param height      The appearance height of the grid
+     * @param intitial    array contains index of 'on' cell
+     */
     public CellularAutomata(int cellsLength, Integer width, Integer height, int[] intitial) {
         this.width = (width != null) ? width : cellsLength;
         this.height = (height != null) ? height : cellsLength;
@@ -62,16 +115,23 @@ public class CellularAutomata {
         initialCells = new int[cellsLength];
         if (intitial != null) {
             for (int i = 0; i < intitial.length; i++) {
-                set(initialCells, intitial[i], 1);
+                set(initialCells, intitial[i], 0, 1, white);
             }
         } else {
-            set(initialCells, initialCells.length / 2, 1);
+            set(initialCells, initialCells.length / 2, 0, 1, white);
         }
 
         cells = Arrays.copyOf(initialCells, initialCells.length);
         nexts = new int[cellsLength];
     }
 
+    /**
+     * Draw the grid with an offset
+     *
+     * @param g2d     The Graphics object
+     * @param offsetX horizontal offset
+     * @param offsetY vertical offset
+     */
     public void draw(Graphics2D g2d, int offsetX, int offsetY) {
         AffineTransform at = g2d.getTransform();
 
@@ -81,19 +141,56 @@ public class CellularAutomata {
         g2d.setTransform(at);
     }
 
+    /**
+     * Draw the grid with no offset
+     *
+     * @param g2d The Graphics object
+     */
     public void draw(Graphics2D g2d) {
         draw(g2d, 0, 0);
     }
 
+    /**
+     * The number of neighbor in the neighborhood, including itself
+     */
     byte neightbors = 3;
-    int pattern = 150, numberOfStates = 1 << neightbors;
-    int[] patternArray = Utils.toBinaryArray(pattern, numberOfStates);
-    int[] reversedPatternArray = Utils.newReversedArray(patternArray);
+    /**
+     * The rule. Range from 0 to 255.
+     * <br>
+     * Value less than 0 can cause unexpected behavior.
+     * <br>
+     * Value larger than 255 will roll back.
+     */
+    int rule = 150;
+    /**
+     * The numbers of possible next state. i.e 2<sup>{@code neighbors}</sup>.
+     */
+    int numberOfStates = 1 << neightbors;
 
+    /**
+     * The binary representation of the rule
+     */
+    int[] ruleArray = Utils.toBinaryArray(rule, numberOfStates);
+
+    /**
+     * The inverse binary representation of the rule
+     */
+    int[] reversedPatternArray = Utils.newReversedArray(ruleArray);
+
+    /**
+     * Current index of the cell to be update.
+     */
     private int cI = 0;
 
-    public void update(int time) {
-        for (int i = 0; i < time; i++) {
+    /**
+     * Update a number of cells from the current state to the next state.
+     * <br>
+     * This method can leave a state half-update, either current or next state.
+     *
+     * @param amount the number of cells to update
+     */
+    public void update(int amount) {
+        for (int i = 0; i < amount; i++) {
             if (currentCol >= image.getHeight()) {
                 return;
             }
@@ -110,6 +207,9 @@ public class CellularAutomata {
         }
     }
 
+    /**
+     * Update the current state to the next state.
+     */
     public void update() {
         if (currentCol >= image.getHeight()) {
             return;
@@ -124,6 +224,11 @@ public class CellularAutomata {
         nexts = temp;
     }
 
+    /**
+     * Update a cell from the current state to the next state.
+     *
+     * @param i the index of the cell
+     */
     protected void neighbor_N(int i) {
         int value = 0;
         for (int j = neightbors - 1; j >= 0; j--) {
@@ -132,12 +237,18 @@ public class CellularAutomata {
             value += c << j;
         }
         value = numberOfStates - 1 - value;
-        nexts[i] = patternArray[value];
+        nexts[i] = ruleArray[value];
         if (nexts[i] == 1) {
             setPixel(i, currentCol, white);
         }
     }
 
+    /**
+     * Update a cell from the current state to the next state.
+     *
+     * @param i the index of the cell
+     * @see neighbor_N1
+     */
     protected void neighbor_N2(int i) {
         int value = 0;
         for (int j = neightbors - 1; j >= 0; j--) {
@@ -151,15 +262,27 @@ public class CellularAutomata {
         }
     }
 
-    private void set(int[] array, int x, int value) {
-        set(array, x, 0, value, white);
-    }
-
+    /**
+     * Set the value and color of a cell
+     *
+     * @param array the state array
+     * @param x     the column of the cell
+     * @param y     the row of the cell
+     * @param value value to be set
+     * @param color color to be set
+     */
     private void set(int[] array, int x, int y, int value, int color) {
         array[x] = value;
         setPixel(x, y, color);
     }
 
+    /**
+     * Set color of a pixel.
+     *
+     * @param x     the x-coordinate of the pixel
+     * @param y     the y-coordinate of the pixel
+     * @param color the new color to the pixel
+     */
     protected void setPixel(int x, int y, int color) {
         int pos = 0;
         pixel[pos++] = (color >> 16 & 0xff);
@@ -167,15 +290,16 @@ public class CellularAutomata {
         pixel[pos++] = (color & 0xff);
         image.getRaster().setPixel(x, y, pixel);
     }
-
+    
+    
     protected void restartToNextPattern() {
-        restart(pattern + 1);
+        restart(rule + 1);
     }
 
-    public void restart(int p) {
-        pattern = p;
-        patternArray = Utils.toBinaryArray(pattern, numberOfStates);
-        Utils.newReversedArray(reversedPatternArray, patternArray);
+    public void restart(int rule) {
+        this.rule = rule;
+        ruleArray = Utils.toBinaryArray(this.rule, numberOfStates);
+        Utils.newReversedArray(reversedPatternArray, ruleArray);
         restart();
     }
 
