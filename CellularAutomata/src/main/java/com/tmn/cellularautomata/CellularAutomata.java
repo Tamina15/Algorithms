@@ -183,20 +183,19 @@ public class CellularAutomata {
         image.getRaster().setPixel(x, y, pixel);
     }
 
-    protected void restartNext() {
+    protected void restartToNextPattern() {
         restart(pattern + 1);
     }
 
-    protected void restart(int p) {
+    public void restart(int p) {
         pattern = p;
-        patternArray = toIntArray(toBinary(pattern, states));
+        patternArray = Utils.toBinaryArray(pattern, numberOfStates);
+        Utils.newReversedArray(reversedPatternArray, patternArray);
         restart();
     }
 
     protected void restartRandom() {
         restart();
-        pattern = (pattern - 1);
-        patternArray = toIntArray(toBinary(pattern, states));
         Random r = new Random();
         for (int i = 0; i < cells.length; i++) {
             cells[i] = r.nextInt(2);
@@ -204,10 +203,7 @@ public class CellularAutomata {
     }
 
     protected void restart() {
-        Graphics2D g2d = (Graphics2D) image.getGraphics();
-        g2d.setColor(Color.black);
-        g2d.fillRect(0, 1, image.getWidth(), image.getHeight());
-        g2d.dispose();
+        clearImage();
         for (int i = 0; i < cells.length; i++) {
             cells[i] = 0;
             nexts[i] = 0;
