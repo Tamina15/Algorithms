@@ -5,33 +5,13 @@ import java.util.Random;
 
 public class CARandom extends Random {
 
-    /**
-     * The number of neighbor in the neighborhood, including itself
-     */
-    private final byte neightbors = 3;
+    private final int[] ruleArray = {0, 1, 1, 0, 1, 0, 0, 1};
 
-    /**
-     * The rule. Value less than 0 can cause unexpected behavior.
-     */
-    private final int rule = 150;
-
-    /**
-     * The numbers of possible next state. i.e 2<sup>{@code neighbors}</sup>.
-     */
-    private final int numberOfStates = 1 << neightbors;
-
-    /**
-     * The binary representation of the rule
-     */
-    private final int[] ruleArray = Utils.toExactBinaryArray(rule, numberOfStates, true);
-
-    private final int length = 66 + 2;
-    private int[] cells = new int[length];
-    private int[] nexts = new int[length];
+    private final int length = 195 + 2;
+    private final int[] cells = new int[length];
     private int cI = 1;
 
     private final long seed;
-    private final long mask = 5351862787966346137l;
 
     public CARandom() {
         this(System.nanoTime());
@@ -46,11 +26,7 @@ public class CARandom extends Random {
         int[] bits = Utils.toBinaryArray(seed, 64);
         int[] reversedBits = Utils.newReversedArray(bits);
         int[] iBits = Utils.toBinaryArray(~seed, 64);
-//        insert(insert(insert(1, reversedBits), iBits), bits);
-//        insert(insert(1, reversedBits), bits);
-        insert(1, bits);
-
-        Utils.reverseArray(ruleArray);
+        insert(insert(insert(1, reversedBits), iBits), bits);
     }
 
     private int insert(int i, int[] seedArray) {
@@ -61,29 +37,27 @@ public class CARandom extends Random {
         return i;
     }
 
+    private int left = 0;
+
     @Override
     protected int next(int bits) {
         int result = 0;
-        for (int i = 0; i < bits; i++) {
-            result = result * 10 + update();
+        int times = bits > 32 ? 32 : bits;
+        for (int i = 0; i < times; i++) {
+            if (cI >= length - 1) {
+                cI = 1;
+                left = 0;
+            }
+            int value = left ^ cells[cI] ^ cells[cI + 1];
+            left = cells[cI];
+            cells[cI] = ruleArray[value];
+            cI++;
+            result = (result << 1) + value;
         }
         return result;
     }
 
-    private int update() {
-        if (cI >= length - 1) {
-            cI = 1;
-            int[] temp = cells;
-            cells = nexts;
-            nexts = temp;
-        }
-        int value = cells[cI - 1] ^ cells[cI] ^ cells[cI + 1];
-        nexts[cI] = ruleArray[value];
-        cI++;
-        return value;
-    }
-
-    class Utils {
+    private class Utils {
 
         /**
          * Convert an integer to its binary string representation,
