@@ -1,5 +1,7 @@
 package com.tmn.cellularautomata;
 
+import java.util.Arrays;
+
 public class Utils {
 
     /**
@@ -14,11 +16,36 @@ public class Utils {
      * @return a binary string representation of the specified integer,
      *         padded with zeros if necessary to meet the minimum length.
      */
-    public static String toBinaryString(int number, int minLength) {
+    public static String toBinaryString(long number, int minLength) {
         if (minLength == 0) {
-            return Integer.toBinaryString(number);
+            return Long.toBinaryString(number);
         }
-        return String.format("%" + minLength + "s", Integer.toBinaryString(number)).replace(' ', '0');
+        return String.format("%" + minLength + "s", Long.toBinaryString(number)).replace(' ', '0');
+    }
+
+    /**
+     * Convert an integer to its binary array representation.
+     *
+     * @param number the integer to be converted to a binary array
+     * @param length the length of the result array
+     * @param onLeft should zero padded or truncate the left of the result array.
+     *               {@code false} to change to right
+     *
+     * @return a binary array representation of the specified integer
+     */
+    public static int[] toExactBinaryArray(int number, int length, boolean onLeft) {
+        if (length <= 0) {
+            return new int[]{};
+        }
+        int[] result = toBinaryArray(toBinaryString(number, length));
+        if (result.length > length) {
+            if (onLeft) {
+                return Arrays.copyOfRange(result, result.length - length, result.length);
+            } else {
+                return Arrays.copyOfRange(result, 0, length);
+            }
+        }
+        return result;
     }
 
     /**
@@ -33,7 +60,7 @@ public class Utils {
      * @return a binary array representation of the specified integer,
      *         padded with zeros if necessary to meet the minimum length.
      */
-    public static int[] toBinaryArray(int number, int minLength) {
+    public static int[] toBinaryArray(long number, int minLength) {
         return toBinaryArray(toBinaryString(number, minLength));
     }
 
@@ -84,9 +111,10 @@ public class Utils {
     /**
      * Populate an array with data which is the reverse elements of supplied array
      *
-     * @param array           the integer array to be written to.
+     * @param array           the array to be written to.
      * @param supplementArray the elements from this array
      *                        will be written in reverse to the {@code array}
+     * @deprecated
      */
     public static void newReversedArray(int[] array, int[] supplementArray) {
         int length = supplementArray.length;
@@ -94,13 +122,15 @@ public class Utils {
             array[i] = supplementArray[length - i - 1];
         }
     }
-    
+
     /**
      * Copy elements from one array to another
-     * @param array the array to copy elements to
-     * @param supplementArray the array to copy elements from 
+     *
+     * @param array           the array to copy elements to
+     * @param supplementArray the array to copy elements from
      */
     public static void copyOf(int[] array, int[] supplementArray) {
         System.arraycopy(supplementArray, 0, array, 0, array.length);
     }
+
 }
