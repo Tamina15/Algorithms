@@ -4,8 +4,13 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 
 public class CellularAutomata {
 
@@ -57,6 +62,8 @@ public class CellularAutomata {
      * Control parameters
      */
     Option option;
+
+    public boolean done;
 
     /**
      * Create an empty grid
@@ -126,9 +133,44 @@ public class CellularAutomata {
     }
 
     /**
+     * Create a grid with a number of cells and an initial condition
+     * that will render {@code width} and {@code height} long.
+     *
+     * @param cellsLength the number of cell
+     * @param width       The appearance width of the grid
+     * @param height      The appearance height of the grid
+     * @param seed        the internal state associated with this pseudorandom number generator.
+     */
+    public CellularAutomata(int cellsLength, Integer width, Integer height, long seed) {
+        this.width = (width != null) ? width : cellsLength;
+        this.height = (height != null) ? height : cellsLength;
+
+        image = new BufferedImage(cellsLength, cellsLength, BufferedImage.TYPE_INT_RGB);
+        pixel = new int[3];
+        initialCells = new int[cellsLength];
+
+        int[] bits = Utils.toBinaryArray(seed, 64);
+        int[] reversedBits = Utils.newReversedArray(bits);
+        int[] iBits = Utils.toBinaryArray(~seed, 64);
+        insert(insert(insert(0, iBits), reversedBits), bits);
+//        insert(insert(0, reversedBits), bits);
+
+        cells = Arrays.copyOf(initialCells, initialCells.length);
+        nexts = new int[cellsLength];
+    }
+
+    private int insert(int i, int[] seedArray) {
+        for (int s : seedArray) {
+            initialCells[i] = s;
+            i = i + 1;
+        }
+        return i;
+    }
+
+    /**
      * Draw the grid with an offset
      *
-     * @param g2d     The Graphics object
+     * @param g2d     The Graphics2D object
      * @param offsetX horizontal offset
      * @param offsetY vertical offset
      */
@@ -137,6 +179,7 @@ public class CellularAutomata {
 
         g2d.translate(offsetX, offsetY);
         g2d.drawImage(image, 0, 0, width, height, null);
+        g2d.drawString(Arrays.toString(ruleArray), 0, -10);
 
         g2d.setTransform(at);
     }
@@ -144,7 +187,7 @@ public class CellularAutomata {
     /**
      * Draw the grid with no offset
      *
-     * @param g2d The Graphics object
+     * @param g2d The Graphics2D object
      */
     public void draw(Graphics2D g2d) {
         draw(g2d, 0, 0);
@@ -154,14 +197,16 @@ public class CellularAutomata {
      * The number of neighbor in the neighborhood, including itself
      */
     byte neightbors = 3;
+
     /**
      * The rule. Range from 0 to 255.
      * <br>
      * Value less than 0 can cause unexpected behavior.
      * <br>
-     * Value larger than 255 will roll back.
+     * Value larger than 255 will be rolled back.
      */
     int rule = 150;
+
     /**
      * The numbers of possible next state. i.e 2<sup>{@code neighbors}</sup>.
      */
@@ -170,7 +215,7 @@ public class CellularAutomata {
     /**
      * The binary representation of the rule
      */
-    int[] ruleArray = Utils.toBinaryArray(rule, numberOfStates);
+    int[] ruleArray = Utils.toExactBinaryArray(rule, numberOfStates, true);
 
     /**
      * The inverse binary representation of the rule
@@ -212,11 +257,13 @@ public class CellularAutomata {
      */
     public void update() {
         if (currentCol >= image.getHeight()) {
+//            currentCol = 1;
+            done = true;
             return;
         }
-        clearLine(currentCol);
+//        clearLine(currentCol + 1);
         for (int i = 0; i < cells.length; i++) {
-            neighbor_N(i);
+            neighbor_N2(i);
         }
         currentCol++;
         int[] temp = cells;
@@ -290,20 +337,23 @@ public class CellularAutomata {
         pixel[pos++] = (color & 0xff);
         image.getRaster().setPixel(x, y, pixel);
     }
-    
-    
-    protected void restartToNextPattern() {
-        restart(rule + 1);
+
+    protected void restartToNextRule() {
+        restartToRule(rule + 1);
     }
 
-    public void restart(int rule) {
+    public void restartToRule(int rule) {
         this.rule = rule;
-        ruleArray = Utils.toBinaryArray(this.rule, numberOfStates);
-        Utils.newReversedArray(reversedPatternArray, ruleArray);
+        ruleArray = Utils.toExactBinaryArray(this.rule, numberOfStates, true);
+        reversedPatternArray = Utils.newReversedArray(ruleArray);
         restart();
     }
 
-    protected void restartRandom() {
+    protected void restartToRandomRule() {
+        throw new UnsupportedOperationException();
+    }
+
+    protected void restartToRandomInintial() {
         restart();
         Random r = new Random();
         for (int i = 0; i < cells.length; i++) {
@@ -320,6 +370,7 @@ public class CellularAutomata {
         cI = 0;
         currentCol = 1;
         cells = Arrays.copyOf(initialCells, initialCells.length);
+        done = false;
     }
 
     protected void clearImage() {
@@ -331,9 +382,20 @@ public class CellularAutomata {
 
     protected void clearLine(int col) {
         col = col % image.getHeight();
+        if (col == 0) {
+            col = 1;
+        }
         int black = Color.black.getRGB();
         for (int i = 0; i < cells.length; i++) {
             setPixel(i, col, black);
+        }
+    }
+
+    private void printImage(String fileExtension, String path) {
+        try {
+            ImageIO.write(image, fileExtension, new File(path));
+        } catch (IOException ex) {
+            Logger.getLogger(CellularAutomata.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
