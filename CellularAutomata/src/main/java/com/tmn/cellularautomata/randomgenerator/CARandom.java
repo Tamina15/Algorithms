@@ -20,9 +20,21 @@ public class CARandom extends Random {
      * 1 bit is remove to make {@code length} odd.
      */
     private final int length = 191;
+
+    /**
+     * The states.
+     *
+     */
     private final int[] cells = new int[length];
+
+    /**
+     * Current index on the {@code cells}.
+     */
     private int cI = 1;
 
+    /**
+     * Initial state of the machine.
+     */
     private final long seed;
 
     public CARandom() {
@@ -35,10 +47,13 @@ public class CARandom extends Random {
     }
 
     /**
-     * Random value array to ensure the automaton machine has sufficient randomness
+     * Random value array to ensure the initial state has sufficient randomness.
      */
     final int[] randomPadding = toBinaryArray(1515151515151515151l);
 
+    /**
+     * Interleaving the seed arrays to create the initial state.
+     */
     private void init() {
         int[] bits = toBinaryArray(seed);
         int[] reversedBits = newReversedArray(bits);
@@ -46,7 +61,7 @@ public class CARandom extends Random {
     }
 
     private int[] interleave(int[] output, int[]... arrays) {
-        for (int i = 0; i < output.length; i++) {
+        for (int i = 0; i < length; i++) {
             try {
                 output[i] = arrays[i % arrays.length][i / arrays.length];
             } catch (Exception e) {
@@ -84,7 +99,7 @@ public class CARandom extends Random {
      * @return a binary array representation of the specified long,
      *         padded with zeros if necessary to meet the length of 64.
      */
-    public static int[] toBinaryArray(long number) {
+    private static int[] toBinaryArray(long number) {
         String string = String.format("%" + 64 + "s", Long.toBinaryString(number)).replace(' ', '0');
         int[] array = string.chars().map((operand) -> operand - 48 /* '0' = 48 */).toArray();
         return array;
@@ -93,10 +108,10 @@ public class CARandom extends Random {
     /**
      * Return a new array that is the reverse of the input array
      *
-     * @param array
+     * @param array the input array
      * @return a new array
      */
-    public static int[] newReversedArray(int[] array) {
+    private static int[] newReversedArray(int[] array) {
         int[] reverse = new int[array.length];
         for (int i = 0; i < reverse.length; i++) {
             reverse[i] = array[array.length - 1 - i];
