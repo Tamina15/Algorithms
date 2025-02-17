@@ -49,8 +49,8 @@ public class Panel extends JPanel {
             @Override
             public void mouseDragged(MouseEvent e) {
                 if (SwingUtilities.isLeftMouseButton(e)) {
-                    int dx = ((e.getX() - mousePt.x) * scale);
-                    int dy = ((e.getY() - mousePt.y) * scale);
+                    int dx = (int) ((e.getX() - mousePt.x) * scale);
+                    int dy = (int) ((e.getY() - mousePt.y) * scale);
                     mousePt.setLocation(e.getX(), e.getY());
                     origin.setLocation(origin.getX() + dx, origin.getY() + dy);
                 }
@@ -78,8 +78,8 @@ public class Panel extends JPanel {
             public void keyReleased(KeyEvent e) {
                 try {
                     int p = Integer.parseInt(textField.getText());
-                    ca.restart(p);
-                    wca.restart(p);
+                    ca.restartToRule(p);
+                    wca.restartToRule(p);
                 } catch (NumberFormatException err) {
                 }
             }
@@ -96,16 +96,16 @@ public class Panel extends JPanel {
     }
 
     private void init() {
-        int length = width;
-        int[] initital = new int[100];
+        int length = 191;
+        int[] initital = new int[length / 3];
         Random r = new Random();
         for (int i = 0; i < initital.length; i++) {
             initital[i] = r.nextInt(length);
         }
 //        ca = new CellularAutomata(100, width, height);
 //        ca = new CellularAutomata(length, width, height);
-        ca = new CellularAutomata(length, width / 2, height, initital);
-        wca = new WrappedCellularAutomata(length, width / 2, height, initital);
+        ca = new CellularAutomata(length);
+        wca = new WrappedCellularAutomata(length * 2 + 1);
     }
 
     @Override
@@ -149,7 +149,11 @@ public class Panel extends JPanel {
         } else {
             delay = 0;
         }
-        ca.update();
-        wca.update();
+        if (!ca.done) {
+            ca.update();
+        }
+        if (!wca.done) {
+            wca.update();
+        }
     }
 }

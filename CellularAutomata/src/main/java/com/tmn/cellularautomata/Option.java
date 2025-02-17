@@ -11,4 +11,6 @@ public class Option {
     int[] patternArray = Utils.toBinaryArray(pattern, numberOfStates);
     int[] reversedPatternArray = Utils.newReversedArray(patternArray);
     boolean wrapped;
+    
+    
 }
