@@ -79,7 +79,6 @@ public class CellularAutomata {
      */
     public CellularAutomata(int cellsLength) {
         this(cellsLength, null, null, null);
-
     }
 
     /**
