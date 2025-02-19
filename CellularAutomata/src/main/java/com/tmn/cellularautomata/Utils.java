@@ -31,7 +31,7 @@ public class Utils {
      * @param onLeft should zero padded or truncate the left of the result array.
      *               {@code false} to change to right
      *
-     * @return a binary array representation of the specified integer
+     * @return a binary array representation of the input integer
      */
     public static int[] toExactBinaryArray(int number, int length, boolean onLeft) {
         if (length <= 0) {
@@ -70,7 +70,7 @@ public class Utils {
      * only contain the characters '0' and '1' for accurate representation.
      *
      * @param binaryString the binary string to be converted to a binary array
-     * @return a binary array representation of the binary string.
+     * @return a binary array representation of the input binary string.
      */
     public static int[] toBinaryArray(String binaryString) {
         int[] array = binaryString.chars().map((operand) -> operand - 48 /* '0' = 48 */).toArray();
@@ -83,7 +83,7 @@ public class Utils {
      * @apiNote
      * This method change the input array element positions.
      *
-     * @param array the integer array to be reversed
+     * @param array the array to be reversed
      *
      */
     public static void reverseArray(int[] array) {
@@ -103,34 +103,22 @@ public class Utils {
      * @return a new array
      */
     public static int[] newReversedArray(int[] array) {
-        int[] reverse = new int[array.length];
-        newReversedArray(reverse, array);
-        return reverse;
-    }
-
-    /**
-     * Populate an array with data which is the reverse elements of supplied array
-     *
-     * @param array           the array to be written to.
-     * @param supplementArray the elements from this array
-     *                        will be written in reverse to the {@code array}
-     * @deprecated
-     */
-    public static void newReversedArray(int[] array, int[] supplementArray) {
-        int length = supplementArray.length;
+        int length = array.length;
+        int[] reverse = new int[length];
         for (int i = 0; i < length; i++) {
-            array[i] = supplementArray[length - i - 1];
+            reverse[i] = array[length - i - 1];
         }
+        return reverse;
     }
 
     /**
      * Copy elements from one array to another
      *
-     * @param array           the array to copy elements to
-     * @param supplementArray the array to copy elements from
+     * @param dest the array to copy elements to
+     * @param src  the array to copy elements from
      */
-    public static void copyOf(int[] array, int[] supplementArray) {
-        System.arraycopy(supplementArray, 0, array, 0, array.length);
+    public static void copyOf(int[] dest, int[] src) {
+        System.arraycopy(src, 0, dest, 0, dest.length);
     }
 
 }
