@@ -12,7 +12,7 @@ public class Main {
     public static void main(String[] args) throws InterruptedException, InvocationTargetException {
         SwingUtilities.invokeAndWait(() -> {
             f = new Frame();
-            p = new Panel(800, 500);
+            p = new Panel(800, 800);
             f.add(p);
             f.pack();
             f.setLocationRelativeTo(null);

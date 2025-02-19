@@ -77,9 +77,11 @@ public class Panel extends JPanel {
             @Override
             public void keyReleased(KeyEvent e) {
                 try {
-                    int p = Integer.parseInt(textField.getText());
-                    ca.restartToRule(p);
-                    wca.restartToRule(p);
+                    int r = Integer.parseInt(textField.getText());
+                    ca.restartToRule(r);
+                    wca.restartToRule(r);
+                    rca.restartToRule(r);
+                    rwca.restartToRule(r);
                 } catch (NumberFormatException err) {
                 }
             }
@@ -96,7 +98,7 @@ public class Panel extends JPanel {
     }
 
     private void init() {
-        int length = 191;
+        int length = 192;
         int[] initital = new int[length / 3];
         Random r = new Random();
         for (int i = 0; i < initital.length; i++) {
@@ -104,8 +106,11 @@ public class Panel extends JPanel {
         }
 //        ca = new CellularAutomata(100, width, height);
 //        ca = new CellularAutomata(length, width, height);
+        long seed = r.nextLong();
         ca = new CellularAutomata(length);
-        wca = new WrappedCellularAutomata(length * 2 + 1);
+        wca = new WrappedCellularAutomata(length);
+        rca = new CellularAutomata(length, 0L);
+        rwca = new WrappedCellularAutomata(length, 0L);
     }
 
     @Override
@@ -118,8 +123,9 @@ public class Panel extends JPanel {
 
         // draw here
         ca.draw(g2d);
-//        wca.draw(g2d);
         wca.draw(g2d, ca.getWidth() + 15, 0);
+        rca.draw(g2d, 0, ca.getHeight() + 15);
+        rwca.draw(g2d, ca.getWidth() + 15, ca.getHeight() + 15);
         ///////////////
 
         g2d.setColor(Color.red);
@@ -129,8 +135,8 @@ public class Panel extends JPanel {
         g2d.setTransform(at);
     }
 
-    CellularAutomata ca;
-    WrappedCellularAutomata wca;
+    CellularAutomata ca, rca;
+    WrappedCellularAutomata wca, rwca;
 
     int waitBefore = 0, waitAfter = -1, delay;
 
@@ -139,21 +145,33 @@ public class Panel extends JPanel {
             waitBefore--;
             return;
         }
+
         if (waitAfter > 0) {
             waitAfter--;
             return;
         }
+
         if (delay > 0) {
             delay--;
             return;
         } else {
             delay = 0;
         }
+
         if (!ca.done) {
             ca.update();
         }
+
         if (!wca.done) {
             wca.update();
+        }
+
+        if (!rca.done) {
+            rca.update();
+        }
+
+        if (!rwca.done) {
+            rwca.update();
         }
     }
 }
