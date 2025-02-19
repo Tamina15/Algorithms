@@ -78,23 +78,38 @@ public class CellularAutomata {
      * @param cellsLength the number of cell
      */
     public CellularAutomata(int cellsLength) {
-        this(cellsLength, null, null);
+        this(cellsLength, null, null, null);
+
     }
 
     /**
-     * Create a grid with a number of cell that will render to {@code width} and {@code height} values.
+     * Create a grid with a number of cell
+     * that will render {@code width} and {@code height} long.
      *
      * @param cellsLength the number of cell
      * @param width       The appearance width of the grid
      * @param height      The appearance height of the grid
      */
-    public CellularAutomata(int cellsLength, Integer width, Integer height) {
-        this(cellsLength, width, height, null);
+    protected CellularAutomata(int cellsLength, Integer width, Integer height) {
+        if (cellsLength == 191) {
+            System.out.println("Length of 191 can introduce cycle with no-wrap 3-neightbor option");
+        }
+        int length = cellsLength;
+        this.width = (width != null) ? width : length;
+        this.height = (height != null) ? height : length;
+
+        image = new BufferedImage(length, cellsLength, BufferedImage.TYPE_INT_RGB);
+        pixel = new int[3];
+
+        initialCells = new int[length];
+
+        cells = new int[length];
+        nexts = new int[length];
     }
 
     /**
      * Create a grid with a number of cells and an initial condition
-     * that will render to {@code width} and {@code height} values.
+     * that will render {@code width} and {@code height} long.
      *
      * @param cellsLength the number of cell
      * @param intitial    array contains index of 'on' cell
@@ -113,13 +128,8 @@ public class CellularAutomata {
      * @param intitial    array contains index of 'on' cell
      */
     public CellularAutomata(int cellsLength, Integer width, Integer height, int[] intitial) {
-        this.width = (width != null) ? width : cellsLength;
-        this.height = (height != null) ? height : cellsLength;
+        this(cellsLength, width, height);
 
-        image = new BufferedImage(cellsLength, cellsLength, BufferedImage.TYPE_INT_RGB);
-        pixel = new int[3];
-
-        initialCells = new int[cellsLength];
         if (intitial != null) {
             for (int i = 0; i < intitial.length; i++) {
                 set(initialCells, intitial[i], 0, 1, white);
@@ -128,9 +138,10 @@ public class CellularAutomata {
             set(initialCells, initialCells.length / 2, 0, 1, white);
         }
 
-        cells = Arrays.copyOf(initialCells, initialCells.length);
-        nexts = new int[cellsLength];
+        Utils.copyOf(cells, initialCells);
     }
+
+    private static final int[] randomPadding = Utils.toBinaryArray(1515151515151515151l, 64);
 
     /**
      * Create a grid with a number of cells and an initial condition
@@ -139,32 +150,34 @@ public class CellularAutomata {
      * @param cellsLength the number of cell
      * @param width       The appearance width of the grid
      * @param height      The appearance height of the grid
-     * @param seed        the internal state associated with this pseudorandom number generator.
+     * @param seed        the initial states of the cells
      */
     public CellularAutomata(int cellsLength, Integer width, Integer height, long seed) {
-        this.width = (width != null) ? width : cellsLength;
-        this.height = (height != null) ? height : cellsLength;
-
-        image = new BufferedImage(cellsLength, cellsLength, BufferedImage.TYPE_INT_RGB);
-        pixel = new int[3];
-        initialCells = new int[cellsLength];
+        this(cellsLength, width, height);
 
         int[] bits = Utils.toBinaryArray(seed, 64);
         int[] reversedBits = Utils.newReversedArray(bits);
-        int[] iBits = Utils.toBinaryArray(~seed, 64);
-        insert(insert(insert(0, iBits), reversedBits), bits);
-//        insert(insert(0, reversedBits), bits);
-
-        cells = Arrays.copyOf(initialCells, initialCells.length);
-        nexts = new int[cellsLength];
+        interleave(initialCells, bits, randomPadding, reversedBits);
+        Utils.copyOf(cells, initialCells);
     }
 
-    private int insert(int i, int[] seedArray) {
-        for (int s : seedArray) {
-            initialCells[i] = s;
-            i = i + 1;
+    public CellularAutomata(int cellsLength, long seed) {
+        this(cellsLength, null, null, seed);
+    }
+
+    private int[] interleave(int[] output, int[]... arrays) {
+        for (int i = 0; i < output.length; i++) {
+            try {
+                int a = arrays[i % arrays.length][i / arrays.length];
+                output[i] = a;
+                if (a == 1) {
+                    set(initialCells, i, 0, 1, white);
+                }
+            } catch (Exception e) {
+//                break;
+            }
         }
-        return i;
+        return output;
     }
 
     /**
@@ -230,7 +243,7 @@ public class CellularAutomata {
     /**
      * Update a number of cells from the current state to the next state.
      * <br>
-     * This method can leave a state half-update, either current or next state.
+     * This method can leave a state half-updated.
      *
      * @param amount the number of cells to update
      */
@@ -257,13 +270,13 @@ public class CellularAutomata {
      */
     public void update() {
         if (currentCol >= image.getHeight()) {
-//            currentCol = 1;
-            done = true;
+            currentCol = 1;
+//            done = true;
             return;
         }
-//        clearLine(currentCol + 1);
+        clearLine(currentCol + 1);
         for (int i = 0; i < cells.length; i++) {
-            neighbor_N2(i);
+            neighbor_N(i);
         }
         currentCol++;
         int[] temp = cells;
@@ -275,6 +288,7 @@ public class CellularAutomata {
      * Update a cell from the current state to the next state.
      *
      * @param i the index of the cell
+     * @see neighbor_N2
      */
     protected void neighbor_N(int i) {
         int value = 0;
@@ -294,7 +308,7 @@ public class CellularAutomata {
      * Update a cell from the current state to the next state.
      *
      * @param i the index of the cell
-     * @see neighbor_N1
+     * @see neighbor_N
      */
     protected void neighbor_N2(int i) {
         int value = 0;
@@ -393,7 +407,9 @@ public class CellularAutomata {
 
     private void printImage(String fileExtension, String path) {
         try {
-            ImageIO.write(image, fileExtension, new File(path));
+            File f = new File(path);
+            ImageIO.write(image, fileExtension, f);
+            System.out.println("Print image to " + f.getPath());
         } catch (IOException ex) {
             Logger.getLogger(CellularAutomata.class.getName()).log(Level.SEVERE, null, ex);
         }
