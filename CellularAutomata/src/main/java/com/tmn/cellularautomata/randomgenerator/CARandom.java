@@ -1,5 +1,6 @@
 package com.tmn.cellularautomata.randomgenerator;
 
+import java.util.Arrays;
 import java.util.Random;
 
 public class CARandom extends Random {
@@ -30,14 +31,14 @@ public class CARandom extends Random {
     /**
      * Initial state of the machine.
      */
-    private long seed;
+    private long CAseed;
 
     public CARandom() {
         this(System.nanoTime());
     }
 
-    public CARandom(long seed) {
-        this.seed = seed;
+    public CARandom(long CAseed) {
+        this.CAseed = CAseed;
         init();
     }
     /**
@@ -49,7 +50,7 @@ public class CARandom extends Random {
      * Initialize the state for the generator
      *
      * @implNote
-     * For an particular seed [s1, s2, s3, s4, ..., s64]
+     * For an particular CAseed [s1, s2, s3, s4, ..., s64]
      * and random padding [p1, p2, p3, p4, ..., p64],
      * this method create the following arrays:
      * <p/>
@@ -59,10 +60,11 @@ public class CARandom extends Random {
         cI = 1;
         left = 0;
         cells = new int[length];
-        int[] seeds = toBinaryArray(seed);
-        int[] reversedSeeds = newReversedArray(seeds);
-        interleave(cells, seeds, randomPadding, reversedSeeds);
+        int[] CAseeds = toBinaryArray(CAseed);
+        int[] reversedSeeds = newReversedArray(CAseeds);
+        interleave(cells, CAseeds, randomPadding, reversedSeeds);
         cells[length - 1] = 0;
+        System.out.println(Arrays.toString(cells));
     }
 
     /**
@@ -111,7 +113,7 @@ public class CARandom extends Random {
      * @return a binary array representation of the specified long,
      *         padded with zeros if necessary to meet the length of 64.
      */
-    private static int[] toBinaryArray(long number) {
+    public static int[] toBinaryArray(long number) {
         String string = String.format("%" + 64 + "s", Long.toBinaryString(number)).replace(' ', '0');
         int[] array = string.chars().map((operand) -> operand - 48 /* '0' = 48 */).toArray();
         return array;
@@ -123,7 +125,7 @@ public class CARandom extends Random {
      * @param array the input array
      * @return a new array
      */
-    private static int[] newReversedArray(int[] array) {
+    public  static int[] newReversedArray(int[] array) {
         int[] reverse = new int[array.length];
         for (int i = 0; i < reverse.length; i++) {
             reverse[i] = array[array.length - 1 - i];
