@@ -5,27 +5,22 @@ import java.util.Random;
 public class CARandom extends Random {
 
     /**
-     * rule 150 in binary, reversed.
-     */
-    private final int[] ruleArray = {0, 1, 1, 0, 1, 0, 0, 1};
-
-    /**
      * Length of the machine.
      *
      * @apiNote
      * The machine true length is 3 bits short of 192 (64 * 3).
      * <p/>
-     * The first and last bits is always zero to remove bound check.
+     * The first and last bits is always zero to remove the need for bound check.
      * <p/>
      * 1 bit is remove to make {@code length} odd.
      */
-    private final int length = 191;
+    private final int length = 194;
 
     /**
      * The states.
      *
      */
-    private final int[] cells = new int[length];
+    private int[] cells;
 
     /**
      * Current index on the {@code cells}.
@@ -35,7 +30,7 @@ public class CARandom extends Random {
     /**
      * Initial state of the machine.
      */
-    private final long seed;
+    private long seed;
 
     public CARandom() {
         this(System.nanoTime());
@@ -45,25 +40,42 @@ public class CARandom extends Random {
         this.seed = seed;
         init();
     }
-
     /**
-     * Random value array to ensure the initial state has sufficient randomness.
+     * Random value array to ensure the initial states has sufficient randomness.
      */
-    final int[] randomPadding = toBinaryArray(1515151515151515151l);
+    private static final int[] randomPadding = toBinaryArray(1515151515151515151l);
 
     /**
-     * Interleaving the seed arrays to create the initial state.
+     * Initialize the state for the generator
+     *
+     * @implNote
+     * For an particular seed [s1, s2, s3, s4, ..., s64]
+     * and random padding [p1, p2, p3, p4, ..., p64],
+     * this method create the following arrays:
+     * <p/>
+     * [0, s1, p1, s64, s2, p2, s63, s3, p3, s62, ..., s63, p63, s2, s64, p64, s1, 0]
      */
     private void init() {
-        int[] bits = toBinaryArray(seed);
-        int[] reversedBits = newReversedArray(bits);
-        interleave(cells, bits, randomPadding, reversedBits);
+        cI = 1;
+        left = 0;
+        cells = new int[length];
+        int[] seeds = toBinaryArray(seed);
+        int[] reversedSeeds = newReversedArray(seeds);
+        interleave(cells, seeds, randomPadding, reversedSeeds);
+        cells[length - 1] = 0;
     }
 
+    /**
+     * Interleaving the supplies array together.
+     *
+     * @param output the result array from the interleave process
+     * @param arrays the input arrays
+     * @return the {@code output} array
+     */
     private int[] interleave(int[] output, int[]... arrays) {
-        for (int i = 0; i < length; i++) {
+        for (int i = 1; i < length - 1; i++) {
             try {
-                output[i] = arrays[i % arrays.length][i / arrays.length];
+                output[i] = arrays[(i - 1) % arrays.length][(i - 1) / arrays.length];
             } catch (Exception e) {
 //                break;
             }
@@ -76,15 +88,15 @@ public class CARandom extends Random {
     @Override
     protected int next(int bits) {
         int result = 0;
-        int times = bits > 32 ? 32 : bits;
-        for (int i = 0; i < times; i++) {
+        for (int i = 0; i < 32; i++) {
             if (cI >= length - 1) {
                 cI = 1;
                 left = 0;
             }
+            // Rule 150: r XOR q XOR p
             int value = left ^ cells[cI] ^ cells[cI + 1];
             left = cells[cI];
-            cells[cI] = ruleArray[value];
+            cells[cI] = value;
             cI++;
             result = (result << 1) + value;
         }
