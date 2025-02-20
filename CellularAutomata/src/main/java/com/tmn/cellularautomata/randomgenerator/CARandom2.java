@@ -1,7 +1,6 @@
 package com.tmn.cellularautomata.randomgenerator;
 
 import java.util.Random;
-import java.util.stream.LongStream;
 
 /**
  * The CARandom2 class implements a random number generator
@@ -14,7 +13,7 @@ import java.util.stream.LongStream;
  * <p>
  * Example usage:
  * <pre>
- * CellularAutomataRNG rng = new CellularAutomataRNG();
+ * CARandom2 rng = new CARandom2();
  * int randomNumber = rng.nextInt();
  * </pre>
  * <p>
@@ -40,17 +39,17 @@ public class CARandom2 extends Random {
     private final int length = 192;
 
     /**
-     * Padding to increase randomness in case {@code seed} has low entropy
+     * Padding to increase randomness in case {@link #seed} has low entropy
      * (too few or too many 1 bits, or continuous 1s or 0s, ...).
      * <p/>
      * E.g: {@link Long#MAX_VALUE}, 0, 1, 2<sup>{@code n}</sup>, 0xFF00000, 0xFFFF00000000L, ...
      * <p/>
-     * This number is choosen arbitrarily.
+     * This number is chosen arbitrarily.
      */
     private static final int[] randomPadding = toBinaryArray(1515151515151515151l);
 
     /**
-     * The initital state of the automaton
+     * The initial state of the automaton
      */
     private long seed;
 
@@ -60,7 +59,7 @@ public class CARandom2 extends Random {
     private long left, mid, right;
 
     /**
-     * Creates a new random number generator with random seed.
+     * Creates a new random number generator with a random seed.
      */
     public CARandom2() {
         this(System.nanoTime());
@@ -86,12 +85,12 @@ public class CARandom2 extends Random {
      * <li>Reverses the binary array.</li>
      * <li>Interleaves the binary array, {@link randomPadding}
      * and the reversed seed binary array to create the initial state array.</li>
-     * <li>Split the initial state array into {@code left}, {@code mid}, and {@code right}.</li>
+     * <li>Split the initial state array into {@link left}, {@link mid}, and {@link right}.</li>
      * </ul>
      *
-     * @see interleave(int length, int[]... arrays)
-     * @see newReversedArray(int[] array)
-     * @see randomPadding
+     * @see #interleave(int length, int[]... arrays)
+     * @see #newReversedArray(int[] array)
+     * @see #randomPadding
      */
     private void init() {
         int[] seeds = toBinaryArray(seed);
@@ -164,7 +163,7 @@ public class CARandom2 extends Random {
     }
 
     /**
-     * Interleaving the supplies array together.
+     * Interleaving the supply arrays together.
      *
      * @param length the length of the output array
      * @param arrays the input arrays
@@ -186,19 +185,19 @@ public class CARandom2 extends Random {
      * @return a binary array representation of the specified long,
      *         padded with zeros if necessary to meet the length of 64.
      */
-    public static int[] toBinaryArray(long number) {
+    private static int[] toBinaryArray(long number) {
         String string = String.format("%" + 64 + "s", Long.toBinaryString(number)).replace(' ', '0');
         int[] array = string.chars().map((operand) -> operand - 48 /* '0' = 48 */).toArray();
         return array;
     }
 
     /**
-     * Return a new array in which the elements in reverse order.
+     * Return a new array in which the elements are in reversed order.
      *
      * @param array the input array
      * @return a new array
      */
-    public static int[] newReversedArray(int[] array) {
+    private static int[] newReversedArray(int[] array) {
         int[] reverse = new int[array.length];
         for (int i = 0; i < reverse.length; i++) {
             reverse[i] = array[array.length - 1 - i];
@@ -206,12 +205,9 @@ public class CARandom2 extends Random {
         return reverse;
     }
 
-    static String print(int[] array) {
+    private static String print(int[] array) {
         StringBuilder b = new StringBuilder();
         for (int i = 0; i < array.length; i++) {
-            if (i != 0 && i % 64 == 0) {
-                b.append("|");
-            }
             if (array[i] == 0) {
                 b.append(".");
             } else {

@@ -9,22 +9,20 @@ public class CARandom extends Random {
      * Length of the machine.
      *
      * @apiNote
-     * The machine true length is 3 bits short of 192 (64 * 3).
+     * The machine true length is 192.
      * <p/>
      * The first and last bits is always zero to remove the need for bound check.
-     * <p/>
-     * 1 bit is remove to make {@code length} odd.
      */
     private final int length = 194;
 
     /**
-     * The states.
+     * The states array.
      *
      */
     private int[] cells;
 
     /**
-     * Current index on the {@code cells}.
+     * Current index on the {@link cells}.
      */
     private int cI = 1;
 
@@ -64,7 +62,6 @@ public class CARandom extends Random {
         int[] reversedSeeds = newReversedArray(CAseeds);
         interleave(cells, CAseeds, randomPadding, reversedSeeds);
         cells[length - 1] = 0;
-        System.out.println(Arrays.toString(cells));
     }
 
     /**
@@ -85,12 +82,15 @@ public class CARandom extends Random {
         return output;
     }
 
-    private int left = 0;
+    /**
+     * Cache value of the previous left neighbor.
+     */
+    private int left;
 
     @Override
     protected int next(int bits) {
-        int result = 0;
-        for (int i = 0; i < 32; i++) {
+        long result = 0;
+        for (int i = 0; i < 64; i++) {
             if (cI >= length - 1) {
                 cI = 1;
                 left = 0;
@@ -102,7 +102,7 @@ public class CARandom extends Random {
             cI++;
             result = (result << 1) + value;
         }
-        return result;
+        return (int) (result >>> (64 - bits));
     }
 
     /**
@@ -113,7 +113,7 @@ public class CARandom extends Random {
      * @return a binary array representation of the specified long,
      *         padded with zeros if necessary to meet the length of 64.
      */
-    public static int[] toBinaryArray(long number) {
+    private static int[] toBinaryArray(long number) {
         String string = String.format("%" + 64 + "s", Long.toBinaryString(number)).replace(' ', '0');
         int[] array = string.chars().map((operand) -> operand - 48 /* '0' = 48 */).toArray();
         return array;
@@ -125,7 +125,7 @@ public class CARandom extends Random {
      * @param array the input array
      * @return a new array
      */
-    public  static int[] newReversedArray(int[] array) {
+    private static int[] newReversedArray(int[] array) {
         int[] reverse = new int[array.length];
         for (int i = 0; i < reverse.length; i++) {
             reverse[i] = array[array.length - 1 - i];

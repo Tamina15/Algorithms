@@ -98,7 +98,7 @@ public class Panel extends JPanel {
     }
 
     private void init() {
-        int length = 192;
+        int length = 193;
         int[] initital = new int[length / 3];
         Random r = new Random();
         for (int i = 0; i < initital.length; i++) {

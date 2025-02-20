@@ -90,9 +90,6 @@ public class CellularAutomata {
      * @param height      The appearance height of the grid
      */
     protected CellularAutomata(int cellsLength, Integer width, Integer height) {
-        if (cellsLength == 191) {
-            System.out.println("Length of 191 can introduce cycle with no-wrap 3-neightbor option");
-        }
         int length = cellsLength;
         this.width = (width != null) ? width : length;
         this.height = (height != null) ? height : length;
