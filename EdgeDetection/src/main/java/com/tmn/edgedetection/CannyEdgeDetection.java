@@ -11,8 +11,6 @@ import java.awt.image.ImageProducer;
 import java.awt.image.Kernel;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
-import java.text.DecimalFormat;
-import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -22,13 +20,20 @@ public class CannyEdgeDetection {
 
     private static final Map<Integer, int[]> colorCache = new HashMap<>();
     private final BufferedImage original;
-    private Option option;
-    private BufferedImage filteredImage;
+    private BufferedImage grayScaleImage, filteredImage;
     private final int width, height;
+
+    private final Option option;
+
     private final int[][] pixels, gradientsX, gradientsY, doubleThresholding, hysteresis;
     private final double[][] gaussians, gradients, angles, nonMaxSuppression;
 
-    private int highPixel = 255, lowPixel = 150;
+    // https://github.com/rstreet85/JCanny
+    private int mean; // https://en.wikipedia.org/wiki/Arithmetic_mean#:~:text=mean%20or%20average,numbers%20in%20the%20collection
+    // The standard deviation of a random variable is the square root of its variance.
+    private int standardDeviation;// https://en.wikipedia.org/wiki/Standard_deviation
+
+    private final int highPixel = 255, lowPixel = 150;
 
     private static final double[] MASK_GAUSSIAN = {
         1 / 16f, 2 / 16f, 1 / 16f,
@@ -69,12 +74,14 @@ public class CannyEdgeDetection {
         this.doubleThresholding = new int[width][height];
         this.hysteresis = new int[width][height];
 
+        queue = new int[width * height];
+
         setPixels();
         filter0();
     }
 
     private void setPixels() {
-        BufferedImage grayScaleImage = getGrayScaleImage(original);
+        grayScaleImage = getGrayScaleImage(original);
         grayScaleImage = applyGaussianBlur(grayScaleImage);
         int w = grayScaleImage.getWidth();
         int h = grayScaleImage.getHeight();
@@ -88,16 +95,12 @@ public class CannyEdgeDetection {
     }
 
     private void filter0() {
-        long start = System.nanoTime();
         sobelX();
         sobelY();
         sobel();
         nonMaximumSuppression();
         doubleThresholding();
         hysteresis();
-        long end = System.nanoTime();
-        System.out.println((end - start) * 1.0 / 1000000);
-
     }
 
     public double filter() {
@@ -174,6 +177,10 @@ public class CannyEdgeDetection {
     }
 
     private void sobel() {
+        double sum = 0;
+        double varianceSum = 0; // https://en.wikipedia.org/wiki/Variance#:~:text=variance%20is%20the%20expected%20value,random%20variable
+        double pixelCount = height * width;
+
         double radToDeg = 180 / Math.PI;
         for (int x = 1; x < width - 1; x++) {
             for (int y = 1; y < height - 1; y++) {
@@ -182,8 +189,21 @@ public class CannyEdgeDetection {
                 gradients[x][y] = Math.sqrt(gX * gX + gY * gY);
                 double angle = Math.atan2(gY, gX) * radToDeg;
                 angles[x][y] = angle;
+                sum += gradients[x][y];
             }
         }
+
+        mean = (int) Math.round(sum / pixelCount);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                double deviation = gradients[x][y] - mean;
+                varianceSum += (deviation * deviation); // squared deviation from the mean
+            }
+        }
+        double varianceMean = Math.round(varianceSum / pixelCount);
+
+        standardDeviation = (int) Math.sqrt(varianceMean);
     }
 
     /**
@@ -230,28 +250,31 @@ public class CannyEdgeDetection {
 
     }
     double max;
+    int[] queue;
 
     private void doubleThresholdingAndHysteresis() {
-        double high = max * option.getHighFraction();
+        double high = mean + (option.getHighFraction() * standardDeviation);
         double low = high * option.getLowFraction();
-        Queue<Integer> queue = new ArrayDeque<>();
+        int a = 0;
+        int n = 0;
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 double grad = nonMaxSuppression[x][y];
                 if (grad >= high) {
                     doubleThresholding[x][y] = highPixel;
-                    queue.add(y * width + x);
+                    queue[n++] = y * width + x;
                 } else if (grad >= low) {
                     doubleThresholding[x][y] = lowPixel;
                 } else {
                     doubleThresholding[x][y] = 0;
                 }
+                hysteresis[x][y] = 0;
             }
         }
 
-        while (!queue.isEmpty()) {
-            int p = queue.poll();
+        while (a < n) {
+            int p = queue[a++];
             int x = p % width;
             int y = p / width;
             hysteresis[x][y] = highPixel;
@@ -259,20 +282,13 @@ public class CannyEdgeDetection {
                 for (int j = -1; j < 2; j++) {
                     try {
                         int x1 = x + i, y1 = y + j;
-                        if (hysteresis[x1][y1] == lowPixel) {
+                        if (doubleThresholding[x1][y1] == lowPixel && hysteresis[x1][y1] != highPixel) {
                             hysteresis[x1][y1] = highPixel;
-                            queue.add(y1 * width + x1);
+                            queue[n++] = (y1 * width + x1);
                         }
                     } catch (Exception e) {
                         continue;
                     }
-                }
-            }
-        }
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                if (hysteresis[x][y] != highPixel) {
-                    hysteresis[x][y] = 0;
                 }
             }
         }
@@ -288,7 +304,7 @@ public class CannyEdgeDetection {
                 }
             }
         }
-        double high = max * option.getHighFraction();
+        double high = mean + (option.getHighFraction() * standardDeviation);
         double low = high * option.getLowFraction();
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
@@ -379,15 +395,12 @@ public class CannyEdgeDetection {
         }
     }
 
-    private boolean checkStrongPixel(int[][] array, int x, int y) {
-        for (int i = -1; i < 2; i++) {
-            for (int j = -1; j < 2; j++) {
-                if (array[x + i][y + j] == highPixel) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    public BufferedImage getGrayScaleImage() {
+        return grayScaleImage;
+    }
+
+    public BufferedImage getFilteredImage() {
+        return filteredImage;
     }
 
     public BufferedImage getSobelXImage() {
@@ -509,16 +522,6 @@ public class CannyEdgeDetection {
             p = 255;
         }
         return p;
-    }
-
-    DecimalFormat formatter = new DecimalFormat("000 ");
-
-    private void print(Object o) {
-        System.out.print(formatter.format(o));
-    }
-
-    private double lerp(double a, double b, double t) {
-        return (1 - t) * a + t * b;
     }
 
     private double inverseLerp(double a, double b, double t) {
