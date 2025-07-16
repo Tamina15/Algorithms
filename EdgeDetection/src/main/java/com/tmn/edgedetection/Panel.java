@@ -70,16 +70,16 @@ public class Panel extends JPanel {
                     zoomMutiplier = 1.15;
                 }
                 if (c == KeyEvent.VK_Q) {
-                    option.setHighFraction(option.getHighFraction() + 0.01);
+                    option.setNumDev(option.getNumDev() + 0.01);
                 }
                 if (c == KeyEvent.VK_A) {
-                    option.setHighFraction(option.getHighFraction() - 0.01);
+                    option.setNumDev(option.getNumDev() - 0.01);
                 }
                 if (c == KeyEvent.VK_W) {
-                    option.setLowFraction(option.getLowFraction() + 0.001);
+                    option.setLowFraction(option.getLowFraction() + 0.01);
                 }
                 if (c == KeyEvent.VK_S) {
-                    option.setLowFraction(option.getLowFraction() - 0.001);
+                    option.setLowFraction(option.getLowFraction() - 0.01);
                 }
             }
 
@@ -144,7 +144,7 @@ public class Panel extends JPanel {
     public void draw(Graphics2D g2d) {
         g2d.setColor(Color.white);
         g2d.setFont(new Font(null, 1, 40));
-        int x = 0;
+        int x = 0, y = image.getHeight();
         x = drawImage(g2d, image, x, 0, "Original");
         x = drawImage(g2d, grayScaleImage, x, 0, "Gray scale");
         x = drawImage(g2d, sobelX, x, 0, "Sobel X");
@@ -152,6 +152,9 @@ public class Panel extends JPanel {
         x = drawImage(g2d, sobel, x, 0, "Sobel Filter Gradient");
         x = drawImage(g2d, angles, x, 0, "Gradient Angles");
         x = drawImage(g2d, nonMaxImage, x, 0, "Non-max Suppression");
+        g2d.drawString(pTime + "", x, y + 50);
+        g2d.drawString(option.getNumDev() + "", x, y + 100);
+        g2d.drawString(option.getLowFraction() + "", x, y + 150);
         x = drawImage(g2d, doubleThreshold, x, 0, "Double Threshold");
         x = drawImage(g2d, hysteresis, x, 0, "Hysteresis");
         x = drawImage(g2d, image, x, 0, "Original");
@@ -169,6 +172,7 @@ public class Panel extends JPanel {
     Option option;
     CannyEdgeDetection canny;
     BufferedImage image, grayScaleImage, sobelX, sobelY, sobel, angles, nonMaxImage, doubleThreshold, hysteresis;
+    double pTime;
 
     private void getImage() {
         try {
@@ -196,7 +200,7 @@ public class Panel extends JPanel {
     }
 
     private void filter() {
-        canny.filter();
+        pTime = canny.filter();
         doubleThreshold = canny.getDoubleThesholdingImage();
         hysteresis = canny.getHysteresisImage();
     }

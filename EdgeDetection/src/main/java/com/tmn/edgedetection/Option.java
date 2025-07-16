@@ -2,11 +2,19 @@ package com.tmn.edgedetection;
 
 public class Option {
 
-    private double highFraction;
+    /**
+     * Number of standard deviations above mean for high threshold
+     */
+    private double numDev;
+
+    /**
+     * The fraction in which higher values
+     * are considered to be strong edge
+     */
     private double lowFraction;
 
-    public Option(double highFraction, double lowFraction) {
-        this.highFraction = highFraction;
+    public Option(double numDev, double lowFraction) {
+        this.numDev = numDev;
         this.lowFraction = lowFraction;
     }
 
@@ -24,12 +32,12 @@ public class Option {
         return cap(value, 0, 1);
     }
 
-    public double getHighFraction() {
-        return highFraction;
+    public double getNumDev() {
+        return numDev;
     }
 
-    public void setHighFraction(double highFraction) {
-        this.highFraction = highFraction;
+    public void setNumDev(double numDev) {
+        this.numDev = numDev > 0 ? numDev : 0;
     }
 
     public double getLowFraction() {

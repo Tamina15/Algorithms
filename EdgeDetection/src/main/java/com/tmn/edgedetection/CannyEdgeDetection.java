@@ -26,7 +26,7 @@ public class CannyEdgeDetection {
     private final Option option;
 
     private final int[][] pixels, gradientsX, gradientsY, doubleThresholding, hysteresis;
-    private final double[][] gaussians, gradients, angles, nonMaxSuppression;
+    private final double[][] gradients, angles, nonMaxSuppression;
 
     // https://github.com/rstreet85/JCanny
     private int mean; // https://en.wikipedia.org/wiki/Arithmetic_mean#:~:text=mean%20or%20average,numbers%20in%20the%20collection
@@ -35,11 +35,6 @@ public class CannyEdgeDetection {
 
     private final int highPixel = 255, lowPixel = 150;
 
-    private static final double[] MASK_GAUSSIAN = {
-        1 / 16f, 2 / 16f, 1 / 16f,
-        2 / 16f, 4 / 16f, 2 / 16f,
-        1 / 16f, 2 / 16f, 1 / 16f
-    };
     private static final int[][] MASK_Y = new int[][]{
         {-1, 0, 1},
         {-2, 0, 2},
@@ -65,7 +60,6 @@ public class CannyEdgeDetection {
         this.height = original.getHeight();
 
         this.pixels = new int[width][height];
-        this.gaussians = new double[width][height];
         this.gradientsX = new int[width][height];
         this.gradientsY = new int[width][height];
         this.gradients = new double[width][height];
@@ -74,7 +68,7 @@ public class CannyEdgeDetection {
         this.doubleThresholding = new int[width][height];
         this.hysteresis = new int[width][height];
 
-        queue = new int[width * height];
+        arrayQueue = new int[width * height];
 
         setPixels();
         filter0();
@@ -83,12 +77,10 @@ public class CannyEdgeDetection {
     private void setPixels() {
         grayScaleImage = getGrayScaleImage(original);
         grayScaleImage = applyGaussianBlur(grayScaleImage);
-        int w = grayScaleImage.getWidth();
-        int h = grayScaleImage.getHeight();
         Raster raster = grayScaleImage.getRaster();
-        int[] data = raster.getPixels(0, 0, w, h, (int[]) null);
-        for (int x = 0; x < w; x++) {
-            for (int y = 0; y < h; y++) {
+        int[] data = raster.getPixels(0, 0, width, height, (int[]) null);
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
                 pixels[x][y] = data[y * width + x];
             }
         }
@@ -122,7 +114,6 @@ public class CannyEdgeDetection {
     }
 
     private BufferedImage applyGaussianBlur(BufferedImage image) {
-        double[][] gaussian = new double[width][height];
         float[] kernel = {
             1 / 16f, 2 / 16f, 1 / 16f,
             2 / 16f, 4 / 16f, 2 / 16f,
@@ -138,7 +129,7 @@ public class CannyEdgeDetection {
      *
      * @param in   the input array
      * @param mask the mask to be apply
-     * @param out  the out array
+     * @param out  the output array
      * @return the {@code out} array
      */
     private int[][] applyMask(int[][] input, int[][] mask, int[][] output) {
@@ -195,8 +186,8 @@ public class CannyEdgeDetection {
 
         mean = (int) Math.round(sum / pixelCount);
 
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+        for (int x = 1; x < width - 1; x++) {
+            for (int y = 1; y < height - 1; y++) {
                 double deviation = gradients[x][y] - mean;
                 varianceSum += (deviation * deviation); // squared deviation from the mean
             }
@@ -216,7 +207,6 @@ public class CannyEdgeDetection {
      * the 45° and 135° section directions are swapped
      */
     private void nonMaximumSuppression() {
-        max = nonMaxSuppression[0][0];
         for (int x = 1; x < width - 1; x++) {
             for (int y = 1; y < height - 1; y++) {
                 double grad = gradients[x][y], q = grad, r = grad;
@@ -239,9 +229,6 @@ public class CannyEdgeDetection {
                 }
                 if (grad >= q && grad >= r) {
                     nonMaxSuppression[x][y] = grad;
-                    if (grad >= max) {
-                        max = grad;
-                    }
                 } else {
                     nonMaxSuppression[x][y] = 0;
                 }
@@ -249,11 +236,11 @@ public class CannyEdgeDetection {
         }
 
     }
-    double max;
-    int[] queue;
+
+    int[] arrayQueue;
 
     private void doubleThresholdingAndHysteresis() {
-        double high = mean + (option.getHighFraction() * standardDeviation);
+        double high = mean + (option.getNumDev() * standardDeviation);
         double low = high * option.getLowFraction();
         int a = 0;
         int n = 0;
@@ -263,7 +250,7 @@ public class CannyEdgeDetection {
                 double grad = nonMaxSuppression[x][y];
                 if (grad >= high) {
                     doubleThresholding[x][y] = highPixel;
-                    queue[n++] = y * width + x;
+                    arrayQueue[n++] = y * width + x;
                 } else if (grad >= low) {
                     doubleThresholding[x][y] = lowPixel;
                 } else {
@@ -274,7 +261,7 @@ public class CannyEdgeDetection {
         }
 
         while (a < n) {
-            int p = queue[a++];
+            int p = arrayQueue[a++];
             int x = p % width;
             int y = p / width;
             hysteresis[x][y] = highPixel;
@@ -284,10 +271,9 @@ public class CannyEdgeDetection {
                         int x1 = x + i, y1 = y + j;
                         if (doubleThresholding[x1][y1] == lowPixel && hysteresis[x1][y1] != highPixel) {
                             hysteresis[x1][y1] = highPixel;
-                            queue[n++] = (y1 * width + x1);
+                            arrayQueue[n++] = (y1 * width + x1);
                         }
                     } catch (Exception e) {
-                        continue;
                     }
                 }
             }
@@ -295,16 +281,7 @@ public class CannyEdgeDetection {
     }
 
     private void doubleThresholding() {
-        double max = nonMaxSuppression[0][0];
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                double grad = nonMaxSuppression[x][y];
-                if (grad >= max) {
-                    max = grad;
-                }
-            }
-        }
-        double high = mean + (option.getHighFraction() * standardDeviation);
+        double high = mean + (option.getNumDev() * standardDeviation);
         double low = high * option.getLowFraction();
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
@@ -342,46 +319,6 @@ public class CannyEdgeDetection {
                             queue.add(new int[]{x + i, y + j});
                         }
                     } catch (Exception e) {
-                        continue;
-                    }
-                }
-            }
-        }
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                if (hysteresis[x][y] != highPixel) {
-                    hysteresis[x][y] = 0;
-                }
-            }
-        }
-    }
-
-    private void hysteresis2() {
-        Queue<Integer> queueX = new LinkedList();
-        Queue<Integer> queueY = new LinkedList();
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                hysteresis[x][y] = doubleThresholding[x][y];
-                if (doubleThresholding[x][y] == highPixel) {
-                    queueX.add(x);
-                    queueY.add(y);
-                }
-            }
-        }
-        while (!queueX.isEmpty() || !queueY.isEmpty()) {
-            int x = queueX.poll();
-            int y = queueY.poll();
-            for (int i = -1; i < 2; i++) {
-                for (int j = -1; j < 2; j++) {
-                    try {
-                        int x1 = x + i, y1 = y + j;
-                        if (hysteresis[x1][y1] == lowPixel) {
-                            hysteresis[x1][y1] = highPixel;
-                            queueX.add(x1);
-                            queueY.add(y1);
-                        }
-                    } catch (Exception e) {
-                        continue;
                     }
                 }
             }
@@ -511,17 +448,6 @@ public class CannyEdgeDetection {
             v = 255;
         }
         return 0xff000000 | (v << 16) | (v << 8) | v;
-    }
-
-    private int getPixel(int pixel) {
-        int p = pixel & 0xFF;
-        if (p < 0) {
-            p = 0;
-        }
-        if (p > 255) {
-            p = 255;
-        }
-        return p;
     }
 
     private double inverseLerp(double a, double b, double t) {
