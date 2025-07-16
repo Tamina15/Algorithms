@@ -17,6 +17,7 @@
         <module>../Rug</module>
         <module>CellularAutomata</module>
         <module>Graphic</module>
+        <module>EdgeDetection</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
