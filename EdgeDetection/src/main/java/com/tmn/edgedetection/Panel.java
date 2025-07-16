@@ -83,20 +83,16 @@ public class Panel extends JPanel {
                     zoomMutiplier = 1.15;
                 }
                 if (c == KeyEvent.VK_Q) {
-                    option.setHighFraction(option.getHighFraction() + 0.001);
-                    doUpdate = true;
+                    option.setHighFraction(option.getHighFraction() + 0.01);
                 }
                 if (c == KeyEvent.VK_A) {
-                    option.setHighFraction(option.getHighFraction() - 0.001);
-                    doUpdate = true;
+                    option.setHighFraction(option.getHighFraction() - 0.01);
                 }
                 if (c == KeyEvent.VK_W) {
                     option.setLowFraction(option.getLowFraction() + 0.001);
-                    doUpdate = true;
                 }
                 if (c == KeyEvent.VK_S) {
                     option.setLowFraction(option.getLowFraction() - 0.001);
-                    doUpdate = true;
                 }
             }
 
@@ -112,7 +108,7 @@ public class Panel extends JPanel {
             }
         });
 
-        option = new Option(0.85, 0.15);
+        option = new Option(1.5, 0.5);
         getImage();
         initImages();
     }
@@ -206,13 +202,8 @@ public class Panel extends JPanel {
 
     private void getImage() {
         try {
-            URL url = URI.create("https://picsum.photos/1500").toURL();
-//            File file = new File("Bikesgray.jpg");
-            File file = new File("2-1500x1500.jpg");
-//            File file = new File("15-1500x1500.jpg");
-//            File file = new File("1_original.jpg");
-//            File file = new File("Untitled.png");
-            image = ImageIO.read(url);
+            File file = new File("sample-1.jpg");
+            image = ImageIO.read(file);
         } catch (MalformedURLException ex) {
             Logger.getLogger(Panel.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
@@ -362,26 +353,28 @@ public class Panel extends JPanel {
         int w = sobelImage.getWidth();
         int h = sobelImage.getHeight();
         BufferedImage nonMaxImage = new BufferedImage(w, h, TYPE_BYTE_GRAY);
-        nonMaxImage.createGraphics().drawImage(sobelImage, 0, 0, w, h, null);
-        for (int x = 2; x < w - 2; x++) {
-            for (int y = 2; y < h - 2; y++) {
+        for (int x = 1; x < w - 1; x++) {
+            for (int y = 1; y < h - 1; y++) {
                 try {
                     int q = 225, r = 255;
                     double a = gradients[x][y];
-                    if ((0 <= a && a < 22.5) || (157.5 <= a && a <= 180)) {
-                        q = nonMaxImage.getRGB(x, y + 1) & 0xFF;
-                        r = nonMaxImage.getRGB(x, y - 1) & 0xFF;
-                    } else if (22.5 <= a && a < 67.5) {
-                        q = nonMaxImage.getRGB(x + 1, y - 1) & 0xFF;
-                        r = nonMaxImage.getRGB(x - 1, y + 1) & 0xFF;
-                    } else if (67.5 <= a && a < 112.5) {
-                        q = nonMaxImage.getRGB(x + 1, y) & 0xFF;
-                        r = nonMaxImage.getRGB(x - 1, y) & 0xFF;
-                    } else if (112.5 <= a && a < 157.5) {
-                        q = nonMaxImage.getRGB(x - 1, y - 1) & 0xFF;
-                        r = nonMaxImage.getRGB(x + 1, y + 1) & 0xFF;
+                    if (a < 0) {
+                        a += 180;
                     }
-                    int pixel = nonMaxImage.getRGB(x, y);
+                    if (a < 22.5 || a >= 157.5) {
+                        q = sobelImage.getRGB(x + 1, y - 1) & 0xFF;
+                        r = sobelImage.getRGB(x - 1, y + 1) & 0xFF;
+                    } else if (22.5 <= a && a < 67.5) {
+                        q = sobelImage.getRGB(x - 1, y - 1) & 0xFF;
+                        r = sobelImage.getRGB(x + 1, y + 1) & 0xFF;
+                    } else if (67.5 <= a && a < 112.5) {
+                        q = sobelImage.getRGB(x, y - 1) & 0xFF;
+                        r = sobelImage.getRGB(x, y + 1) & 0xFF;
+                    } else if (112.5 <= a && a < 157.5) {
+                        q = sobelImage.getRGB(x + 1, y) & 0xFF;
+                        r = sobelImage.getRGB(x - 1, y) & 0xFF;
+                    }
+                    int pixel = sobelImage.getRGB(x, y);
                     int pi = pixel & 0xFF;
                     if (pi >= q && pi >= r) {
                         nonMaxImage.setRGB(x, y, pixel);
@@ -389,7 +382,7 @@ public class Panel extends JPanel {
                         nonMaxImage.setRGB(x, y, 0);
                     }
                 } catch (Exception e) {
-                    nonMaxImage.setRGB(x - 1, y - 1, 0);
+                    nonMaxImage.setRGB(x, y, 0);
                 }
             }
         }
