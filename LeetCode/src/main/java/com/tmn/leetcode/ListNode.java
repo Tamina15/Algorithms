@@ -2,7 +2,6 @@ package com.tmn.leetcode;
 
 import java.util.Arrays;
 import java.util.Random;
-import java.util.function.IntUnaryOperator;
 
 public class ListNode {
 
@@ -25,26 +24,28 @@ public class ListNode {
         if (args.length == 0) {
             return null;
         }
-        ListNode l = new ListNode(args[0]);
-        ListNode current = l;
+        ListNode root = new ListNode(args[0]);
+        ListNode current = root;
         for (int i = 1; i < args.length; i++) {
             ListNode c = new ListNode(args[i]);
             current.next = c;
             current = c;
         }
-        return l;
+        return root;
     }
 
     public static ListNode randomize(int length) {
-        return from(length, Integer.MIN_VALUE, Integer.MAX_VALUE);
+        return randomize(length, Integer.MIN_VALUE, Integer.MAX_VALUE);
     }
 
     public static ListNode randomize(int length, int lowerBound, int upperBound) {
-        if (lowerBound >= upperBound) {
+        if (lowerBound >= upperBound || length <= 0) {
             return null;
         }
         Random r = new Random();
-        return from(length, (operand) -> r.nextInt(lowerBound, upperBound));
+        int[] args = new int[length];
+        Arrays.setAll(args, (operand) -> r.nextInt(lowerBound, upperBound));
+        return from(args);
     }
 
     public static ListNode shuffle(int length) {
@@ -58,7 +59,7 @@ public class ListNode {
         int[] array = new int[length];
         Random random = new Random();
         for (int i = 0; i < array.length; i++) {
-            int index = random.nextInt(i + 1);
+            int index = random.nextInt(i);
             int temp = array[index];
             array[index] = i + startRange;
             array[i] = temp;
@@ -66,28 +67,25 @@ public class ListNode {
         return from(array);
     }
 
-    private static ListNode from(int length, IntUnaryOperator generator) {
-        if (length <= 0) {
-            return null;
-        }
-        int[] args = new int[length];
-        Arrays.setAll(args, generator);
-        return from(args);
-    }
-
     @Override
     public String toString() {
-        return toString(0);
+        StringBuilder sb = new StringBuilder("[");
+        toString1(sb);
+        return sb.toString();
+//        return toString(0);
     }
 
     private String toString(int a) {
-        if (a == 0) {
-            return "[" + val + next.toString(1);
-        }
-        String v = ", " + val;
+        return ((a == 0) ? "[" : ", ") + val + ((next == null) ? "]" : next.toString(1));
+    }
+
+    private void toString1(StringBuilder sb) {
+        sb.append(val);
         if (next == null) {
-            return v + "]";
+            sb.append("]");
+        } else {
+            sb.append(", ");
+            next.toString1(sb);
         }
-        return v + next.toString(1);
     }
 }

@@ -19,7 +19,7 @@ public class FirstMissingPositive {
      * <p>
      * Operations: Move each value to the corresponded (index - 1). Eg: [1, 2, 3, 4, 5, ..., n].
      * Any value that is missing will be represented as -1.
-     * Any value that is &lt;=0 or > array's length will be excluded.
+     * Any value that is &lt;=0 or &gt; array's length will be excluded.
      * Iterate through the array and return first value that is &lt;= 0,
      * or array's length + 1 if not found any.
      * <p>

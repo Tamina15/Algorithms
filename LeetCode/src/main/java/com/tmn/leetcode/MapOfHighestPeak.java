@@ -62,7 +62,7 @@ public class MapOfHighestPeak {
     }
 
     public static void main(String[] args) {
-        int[][] isWater = {{0, 0, 1, 0}, {1, 0, 0, 0}, {0, 0, 0, 1}};
+        int[][] isWater = {{0, 0, 1, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 1, 0, 0, 0, 0}};
         int[][] result = highestPeak(isWater);
         for (int[] i : result) {
             System.out.println(Arrays.toString(i));

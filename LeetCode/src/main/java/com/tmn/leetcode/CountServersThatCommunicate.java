@@ -7,7 +7,7 @@ public class CountServersThatCommunicate {
     /**
      * Return the number of servers that communicate with any other server.
      * Two servers are said to communicate if they are on the same row or on the same column.
-     * <p>
+     * <p/>
      * Count all servers in each rows and each columns.
      * If a server is the only one in a row and a column,
      * then that server can't communicate with any other servers

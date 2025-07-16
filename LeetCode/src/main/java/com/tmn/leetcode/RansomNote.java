@@ -9,7 +9,6 @@ public class RansomNote {
         char[] rm = magazine.toCharArray();
         for (int i = 0; i < rc.length; i++) {
             r[(rc[i] - 'a')]++;
-
         }
         for (int i = 0; i < rm.length; i++) {
             m[(rm[i] - 'a')]++;
