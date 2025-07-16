@@ -3,7 +3,7 @@ package com.tmn.edgedetection;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-public class EdgeDetection {
+public class Main {
 
     public static void main(String[] args) throws InterruptedException {
         Panel p = new Panel(800, 500);
@@ -43,8 +43,9 @@ public class EdgeDetection {
                 }
             }
         });
+        System.out.println("Scroll mouse wheel to zoom. Hold CTRL to increase zoom speed");
+        System.out.println("Hold left mouse button and drag to move around");
         drawThread.join();
         updateThread.join();
-        System.out.println("Main");
     }
 }
