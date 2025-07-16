@@ -47,12 +47,10 @@ public class test {
     public static void main(String[] args) {
         long s = System.nanoTime();
         Random r = new Random(s);
-        Random ca = new CARandom2(s);
+        Random ca = new CARandom(s);
         for (int i = 0; i < 100; i++) {
-//            R(r);
-//            R(ca);
-            System.out.println(r.nextInt());
-            System.out.println(ca.nextInt());
+            R(r);
+            R(ca);
             System.out.println("------------");
         }
     }

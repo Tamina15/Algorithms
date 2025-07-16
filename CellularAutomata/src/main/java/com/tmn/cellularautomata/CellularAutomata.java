@@ -341,10 +341,9 @@ public class CellularAutomata {
      * @param color the new color to the pixel
      */
     protected void setPixel(int x, int y, int color) {
-        int pos = 0;
-        pixel[pos++] = (color >> 16 & 0xff);
-        pixel[pos++] = (color >> 8 & 0xff);
-        pixel[pos++] = (color & 0xff);
+        pixel[0] = (color >> 16 & 0xff);
+        pixel[1] = (color >> 8 & 0xff);
+        pixel[2] = (color & 0xff);
         image.getRaster().setPixel(x, y, pixel);
     }
 

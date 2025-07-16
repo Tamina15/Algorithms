@@ -1,5 +1,6 @@
 package com.tmn.cellularautomata.GUI;
 
+import java.awt.Component;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.Consumer;
 import javax.swing.SwingUtilities;
@@ -34,14 +35,14 @@ public class Main {
         ));
     }
 
-    public static Runnable loop(Frame f, int fps, Runnable task, Consumer<Integer> perSecondTask) {
+    public static Runnable loop(Component component, int fps, Runnable task, Consumer<Integer> perSecondTask) {
         return () -> {
             double delta = 0;
             double interval = 1000000000 / fps;
             long lastTime = System.nanoTime();
             long timer = 0;
             int count = 0, cps = 0;
-            while (f.isEnabled()) {
+            while (component.isEnabled()) {
                 long currentTime = System.nanoTime();
                 delta += (currentTime - lastTime) / interval;
                 timer += (currentTime - lastTime);

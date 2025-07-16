@@ -1,6 +1,6 @@
 package com.tmn.cellularautomata.randomgenerator;
 
-import java.util.Random;
+import java.util.random.RandomGenerator;
 
 /**
  * The CARandom2 class implements a random number generator
@@ -10,14 +10,13 @@ import java.util.Random;
  * can be in one of two states (0 or 1), represented by 3 {@code long} values.
  * The state of each cell in the next generation is determined by a fixed rule
  * that considers the current state of the cell and its two immediate neighbors.
- * </p>
+ * <p>
  * Example usage:
  * <pre>
  * CARandom2 rng = new CARandom2();
  * int randomNumber = rng.nextInt();
  * </pre>
  * <p>
- * </p>
  * This class is not thread-safe.
  *
  * @implNote
@@ -32,12 +31,12 @@ import java.util.Random;
  *
  * @author nhat.tranminh
  */
-public class CARandom2 extends Random {
+public class CARandom4 implements RandomGenerator {
 
     /**
      * Number of bits in 3 {@code long} values.
      */
-    private final int length = Long.SIZE * 3;
+    private final int length = 192;
 
     /**
      * Padding to increase randomness in case {@link #seed} has low entropy
@@ -62,7 +61,7 @@ public class CARandom2 extends Random {
     /**
      * Creates a new random number generator with a random seed.
      */
-    public CARandom2() {
+    public CARandom4() {
         this(System.nanoTime());
     }
 
@@ -73,7 +72,7 @@ public class CARandom2 extends Random {
      * @param seed the initial seed
      * @see #setSeed(long)
      */
-    public CARandom2(long seed) {
+    public CARandom4(long seed) {
         this.seed = seed;
         init();
     }
@@ -97,10 +96,10 @@ public class CARandom2 extends Random {
         int[] seeds = toBinaryArray(seed);
         int[] reversedSeeds = newReversedArray(seeds);
         int[] cells = interleave(length, seeds, randomPadding, reversedSeeds);
-        for (int i = 0; i < Long.SIZE; i++) {
+        for (int i = 0; i < 64; i++) {
             left = (left << 1) + cells[i];
-            mid = (mid << 1) + cells[i + Long.SIZE];
-            right = (right << 1) + cells[i + (Long.SIZE * 2)];
+            mid = (mid << 1) + cells[i + 64];
+            right = (right << 1) + cells[i + 128];
         }
     }
 
@@ -109,11 +108,8 @@ public class CARandom2 extends Random {
      */
     private int switcher;
 
-    /**
-     * {@inheritDoc }
-     */
     @Override
-    protected int next(int bits) {
+    public long nextLong() {
         next();
         switcher = (switcher + 1) % 3;
         long result = switch (switcher) {
@@ -124,7 +120,7 @@ public class CARandom2 extends Random {
             default ->
                 mid;
         };
-        return (int) (result >>> (Long.SIZE - bits));
+        return result;
     }
 
     /**
@@ -146,19 +142,18 @@ public class CARandom2 extends Random {
      * {@code right} left-shifted once.
      */
     private void next() {
-        int lengthMinusOne = Long.SIZE -1;
-        long nextA = ((left << 1) | (mid >>> lengthMinusOne)) ^ left ^ (left >>> 1);
-        long nextB = ((mid << 1) | (right >>> lengthMinusOne)) ^ mid ^ ((mid >>> 1) | ((left & 1) << lengthMinusOne));
-        long nextC = (right << 1) ^ right ^ ((right >>> 1) | ((mid & 1) << lengthMinusOne));
+        long nextA = ((left << 1) | (mid >>> 63)) ^ left ^ (left >>> 1);
+        long nextB = ((mid << 1) | (right >>> 63)) ^ mid ^ ((mid >>> 1) | ((left & 1) << 63));
+        long nextC = (right << 1) ^ right ^ ((right >>> 1) | ((mid & 1) << 63));
         left = nextA;
         mid = nextB;
         right = nextC;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
+    private long nextGeneration(long left, long mid, long right) {
+        return ((mid << 1) | (right >>> 63)) ^ mid ^ ((mid >>> 1) | ((left & 1) << 63));
+    }
+
     public void setSeed(long seed) {
         this.seed = seed;
         init();
@@ -188,8 +183,8 @@ public class CARandom2 extends Random {
      *         padded with zeros if necessary to meet the length of 64.
      */
     private static int[] toBinaryArray(long number) {
-        String string = String.format("%" + Long.SIZE + "s", Long.toBinaryString(number)).replace(' ', '0');
-        int[] array = string.chars().map((operand) -> operand - '0').toArray();
+        String string = String.format("%" + 64 + "s", Long.toBinaryString(number)).replace(' ', '0');
+        int[] array = string.chars().map((operand) -> operand - 48 /* '0' = 48 */).toArray();
         return array;
     }
 
@@ -218,4 +213,5 @@ public class CARandom2 extends Random {
         }
         return b.toString();
     }
+
 }
