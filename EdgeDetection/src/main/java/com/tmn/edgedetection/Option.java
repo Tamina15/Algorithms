@@ -29,7 +29,7 @@ public class Option {
     }
 
     public void setHighFraction(double highFraction) {
-        this.highFraction = cap(highFraction);
+        this.highFraction = highFraction;
     }
 
     public double getLowFraction() {
