@@ -18,9 +18,10 @@ import java.util.Queue;
 
 public class CannyEdgeDetection {
 
-    private static final Map<Integer, int[]> colorCache = new HashMap<>();
+    private static final Map<Integer, int[]> grayArrayCache = new HashMap<>();
+    private static final Map<Integer, Integer> grayCache = new HashMap<>();
     private final BufferedImage original;
-    private BufferedImage grayScaleImage, filteredImage;
+    private BufferedImage grayScaleImage, doubleThresholdingImage, hysteresisImage, filteredImage;
     private final int width, height;
 
     private final Option option;
@@ -48,7 +49,8 @@ public class CannyEdgeDetection {
 
     static {
         for (int i = 0; i <= 255; i++) {
-            colorCache.put(i, new int[]{i, i, i});
+            grayArrayCache.put(i, new int[]{i, i, i});
+            grayCache.put(i, 0xff000000 | (i << 16) | (i << 8) | i);
         }
     }
 
@@ -59,14 +61,17 @@ public class CannyEdgeDetection {
         this.width = original.getWidth();
         this.height = original.getHeight();
 
-        this.pixels = new int[width][height];
-        this.gradientsX = new int[width][height];
-        this.gradientsY = new int[width][height];
-        this.gradients = new double[width][height];
-        this.angles = new double[width][height];
-        this.nonMaxSuppression = new double[width][height];
-        this.doubleThresholding = new int[width][height];
-        this.hysteresis = new int[width][height];
+        this.pixels = new int[height][width];
+        this.gradientsX = new int[height][width];
+        this.gradientsY = new int[height][width];
+        this.gradients = new double[height][width];
+        this.angles = new double[height][width];
+        this.nonMaxSuppression = new double[height][width];
+        this.doubleThresholding = new int[height][width];
+        this.hysteresis = new int[height][width];
+
+        doubleThresholdingImage = new BufferedImage(width, height, TYPE_BYTE_GRAY);
+        hysteresisImage = new BufferedImage(width, height, TYPE_BYTE_GRAY);
 
         arrayQueue = new int[width * height];
 
@@ -79,9 +84,9 @@ public class CannyEdgeDetection {
         grayScaleImage = applyGaussianBlur(grayScaleImage);
         Raster raster = grayScaleImage.getRaster();
         int[] data = raster.getPixels(0, 0, width, height, (int[]) null);
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                pixels[x][y] = data[y * width + x];
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                pixels[row][col] = data[row * width + col];
             }
         }
     }
@@ -138,22 +143,22 @@ public class CannyEdgeDetection {
         }
         int w = input.length;
         int h = input[0].length;
-        if (w < 3 || h < 3 || mask.length != 3 || mask[0].length != 3) {
+        if (w < 3 || h < 3) {
             return null;
         }
         if (output == null) {
             output = new int[w][h];
         }
-        for (int x = 0; x < w - 2; x++) {
-            for (int y = 0; y < h - 2; y++) {
+        for (int row = 0; row < height - 2; row++) {
+            for (int col = 0; col < width - 2; col++) {
                 int sum = 0;
                 for (int i = 0; i < 3; i++) {
                     for (int j = 0; j < 3; j++) {
-                        sum += (mask[i][j] * input[x + i][y + j]);
+                        sum += (mask[i][j] * input[row + i][col + j]);
                     }
                 }
                 sum = sum / 9;
-                output[x + 1][y + 1] = sum;
+                output[row + 1][col + 1] = sum;
             }
         }
         return output;
@@ -167,28 +172,27 @@ public class CannyEdgeDetection {
         applyMask(pixels, MASK_Y, gradientsY);
     }
 
-    private void sobel() {
+    public void sobel() {
         double sum = 0;
         double varianceSum = 0; // https://en.wikipedia.org/wiki/Variance#:~:text=variance%20is%20the%20expected%20value,random%20variable
         double pixelCount = height * width;
 
         double radToDeg = 180 / Math.PI;
-        for (int x = 1; x < width - 1; x++) {
-            for (int y = 1; y < height - 1; y++) {
-                double gX = gradientsX[x][y];
-                double gY = gradientsY[x][y];
-                gradients[x][y] = Math.sqrt(gX * gX + gY * gY);
+        for (int col = 1; col < height - 1; col++) {
+            for (int row = 1; row < width - 1; row++) {
+                double gX = gradientsX[col][row];
+                double gY = gradientsY[col][row];
+                gradients[col][row] = Math.sqrt(gX * gX + gY * gY);
                 double angle = Math.atan2(gY, gX) * radToDeg;
-                angles[x][y] = angle;
-                sum += gradients[x][y];
+                angles[col][row] = angle;
+                sum += gradients[col][row];
             }
         }
 
         mean = (int) Math.round(sum / pixelCount);
-
-        for (int x = 1; x < width - 1; x++) {
-            for (int y = 1; y < height - 1; y++) {
-                double deviation = gradients[x][y] - mean;
+        for (int col = 1; col < height - 1; col++) {
+            for (int row = 1; row < width - 1; row++) {
+                double deviation = gradients[col][row] - mean;
                 varianceSum += (deviation * deviation); // squared deviation from the mean
             }
         }
@@ -206,31 +210,31 @@ public class CannyEdgeDetection {
      * 0
      * the 45° and 135° section directions are swapped
      */
-    private void nonMaximumSuppression() {
-        for (int x = 1; x < width - 1; x++) {
-            for (int y = 1; y < height - 1; y++) {
-                double grad = gradients[x][y], q = grad, r = grad;
-                double angle = angles[x][y];
+    public void nonMaximumSuppression() {
+        for (int col = 1; col < height - 1; col++) {
+            for (int row = 1; row < width - 1; row++) {
+                double grad = gradients[col][row], q = grad, r = grad;
+                double angle = angles[col][row];
                 if (angle < 0) {
                     angle += 180;
                 }
                 if (angle < 22.5 || angle >= 157.5) {
-                    q = gradients[x + 1][y];
-                    r = gradients[x - 1][y];
+                    q = gradients[col + 1][row];
+                    r = gradients[col - 1][row];
                 } else if ((angle >= 22.5 && angle < 67.5)) {
-                    q = gradients[x - 1][y - 1];
-                    r = gradients[x + 1][y + 1];
+                    q = gradients[col - 1][row - 1];
+                    r = gradients[col + 1][row + 1];
                 } else if ((angle >= 67.5 && angle < 112.5)) {
-                    q = gradients[x][y - 1];
-                    r = gradients[x][y + 1];
+                    q = gradients[col][row - 1];
+                    r = gradients[col][row + 1];
                 } else if ((angle >= 112.5 && angle < 157.5)) {
-                    q = gradients[x + 1][y - 1];
-                    r = gradients[x - 1][y + 1];
+                    q = gradients[col + 1][row - 1];
+                    r = gradients[col - 1][row + 1];
                 }
                 if (grad >= q && grad >= r) {
-                    nonMaxSuppression[x][y] = grad;
+                    nonMaxSuppression[col][row] = grad;
                 } else {
-                    nonMaxSuppression[x][y] = 0;
+                    nonMaxSuppression[col][row] = 0;
                 }
             }
         }
@@ -245,33 +249,33 @@ public class CannyEdgeDetection {
         int a = 0;
         int n = 0;
 
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                double grad = nonMaxSuppression[x][y];
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                double grad = nonMaxSuppression[row][col];
                 if (grad >= high) {
-                    doubleThresholding[x][y] = highPixel;
-                    arrayQueue[n++] = y * width + x;
+                    doubleThresholding[row][col] = highPixel;
+                    arrayQueue[n++] = row * width + col;
                 } else if (grad >= low) {
-                    doubleThresholding[x][y] = lowPixel;
+                    doubleThresholding[row][col] = lowPixel;
                 } else {
-                    doubleThresholding[x][y] = 0;
+                    doubleThresholding[row][col] = 0;
                 }
-                hysteresis[x][y] = 0;
+                hysteresis[row][col] = 0;
             }
         }
 
         while (a < n) {
             int p = arrayQueue[a++];
-            int x = p % width;
-            int y = p / width;
-            hysteresis[x][y] = highPixel;
+            int row = p / width;
+            int col = p % width;
+            hysteresis[row][col] = highPixel;
             for (int i = -1; i < 2; i++) {
                 for (int j = -1; j < 2; j++) {
                     try {
-                        int x1 = x + i, y1 = y + j;
-                        if (doubleThresholding[x1][y1] == lowPixel && hysteresis[x1][y1] != highPixel) {
-                            hysteresis[x1][y1] = highPixel;
-                            arrayQueue[n++] = (y1 * width + x1);
+                        int row1 = row + i, col1 = col + j;
+                        if (doubleThresholding[row1][col1] == lowPixel && hysteresis[row1][col1] != highPixel) {
+                            hysteresis[row1][col1] = highPixel;
+                            arrayQueue[n++] = (row1 * width + col1);
                         }
                     } catch (Exception e) {
                     }
@@ -280,53 +284,54 @@ public class CannyEdgeDetection {
         }
     }
 
-    private void doubleThresholding() {
+    public void doubleThresholding() {
         double high = mean + (option.getNumDev() * standardDeviation);
         double low = high * option.getLowFraction();
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                double grad = nonMaxSuppression[x][y];
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                double grad = nonMaxSuppression[row][col];
                 if (grad >= high) {
-                    doubleThresholding[x][y] = highPixel;
+                    doubleThresholding[row][col] = highPixel;
                 } else if (grad >= low) {
-                    doubleThresholding[x][y] = lowPixel;
+                    doubleThresholding[row][col] = lowPixel;
                 } else {
-                    doubleThresholding[x][y] = 0;
+                    doubleThresholding[row][col] = 0;
                 }
             }
         }
     }
 
-    private void hysteresis() {
+    public void hysteresis() {
         Queue<int[]> queue = new LinkedList();
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                hysteresis[x][y] = doubleThresholding[x][y];
-                if (doubleThresholding[x][y] == highPixel) {
-                    queue.add(new int[]{x, y});
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                hysteresis[row][col] = doubleThresholding[row][col];
+                if (doubleThresholding[row][col] == highPixel) {
+                    queue.add(new int[]{row, col});
                 }
             }
         }
         while (!queue.isEmpty()) {
             int[] p = queue.poll();
-            int x = p[0], y = p[1];
-            hysteresis[x][y] = highPixel;
+            int row = p[0], col = p[1];
             for (int i = -1; i < 2; i++) {
                 for (int j = -1; j < 2; j++) {
                     try {
-                        if (hysteresis[x + i][y + j] == lowPixel) {
-                            hysteresis[x + i][y + j] = highPixel;
-                            queue.add(new int[]{x + i, y + j});
+                        int row1 = row + i, col1 = col + j;
+                        if (hysteresis[row1][col1] == lowPixel) {
+                            hysteresis[row1][col1] = highPixel;
+                            queue.add(new int[]{row1, col1});
                         }
                     } catch (Exception e) {
                     }
                 }
             }
         }
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                if (hysteresis[x][y] != highPixel) {
-                    hysteresis[x][y] = 0;
+
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                if (hysteresis[row][col] != highPixel) {
+                    hysteresis[row][col] = 0;
                 }
             }
         }
@@ -361,21 +366,21 @@ public class CannyEdgeDetection {
     }
 
     public BufferedImage getDoubleThesholdingImage() {
-        return getImage2(doubleThresholding);
+        return getImage2(doubleThresholding, doubleThresholdingImage);
     }
 
     public BufferedImage getHysteresisImage() {
-        return getImage2(hysteresis);
+        return getImage2(hysteresis, hysteresisImage);
     }
 
     public BufferedImage getImage(double[][] pixels) {
-        int w = pixels.length;
-        int h = pixels[0].length;
+        int h = pixels.length;
+        int w = pixels[0].length;
         BufferedImage image = new BufferedImage(w, h, TYPE_BYTE_GRAY);
         double min = pixels[1][1], max = pixels[1][1];
-        for (int x = 1; x < w - 1; x++) {
-            for (int y = 1; y < h - 1; y++) {
-                double g = pixels[x][y];
+        for (int row = 1; row < h - 1; row++) {
+            for (int col = 1; col < w - 1; col++) {
+                double g = pixels[row][col];
                 if (g < min) {
                     min = g;
                 }
@@ -385,24 +390,24 @@ public class CannyEdgeDetection {
             }
         }
         WritableRaster raster = image.getRaster();
-        for (int x = 1; x < w - 1; x++) {
-            for (int y = 1; y < h - 1; y++) {
-                double g = pixels[x][y];
+        for (int row = 1; row < h - 1; row++) {
+            for (int col = 1; col < w - 1; col++) {
+                double g = pixels[row][col];
                 int p = (int) interpolate(min, max, g, 0, 255);
-                raster.setPixel(x, y, getGrayPixelArray(p));
+                raster.setPixel(col, row, getGrayPixelArray(p));
             }
         }
         return image;
     }
 
     private BufferedImage getImage(int[][] pixels) {
-        int w = pixels.length;
-        int h = pixels[0].length;
+        int h = pixels.length;
+        int w = pixels[0].length;
         BufferedImage image = new BufferedImage(w, h, TYPE_BYTE_GRAY);
-        int min = pixels[1][1], max = pixels[1][1];
-        for (int x = 1; x < w - 1; x++) {
-            for (int y = 1; y < h - 1; y++) {
-                int g = pixels[x][y];
+        double min = pixels[1][1], max = pixels[1][1];
+        for (int row = 1; row < h - 1; row++) {
+            for (int col = 1; col < w - 1; col++) {
+                double g = pixels[row][col];
                 if (g < min) {
                     min = g;
                 }
@@ -412,42 +417,42 @@ public class CannyEdgeDetection {
             }
         }
         WritableRaster raster = image.getRaster();
-        for (int x = 1; x < w - 1; x++) {
-            for (int y = 1; y < h - 1; y++) {
-                int g = pixels[x][y];
+        for (int row = 1; row < h - 1; row++) {
+            for (int col = 1; col < w - 1; col++) {
+                double g = pixels[row][col];
                 int p = (int) interpolate(min, max, g, 0, 255);
-                raster.setPixels(x, y, 1, 1, getGrayPixelArray(p));
+                raster.setPixel(col, row, getGrayPixelArray(p));
             }
         }
         return image;
     }
 
-    private BufferedImage getImage2(int[][] pixels) {
-        int w = pixels.length;
-        int h = pixels[0].length;
-        BufferedImage image = new BufferedImage(w, h, TYPE_BYTE_GRAY);
-        for (int x = 0; x < w; x++) {
-            for (int y = 0; y < h; y++) {
-                int g = pixels[x][y];
-                image.setRGB(x, y, getGrayPixel(g));
-            }
+    private BufferedImage getImage2(int[][] pixels, BufferedImage image) {
+        int h = pixels.length;
+        int w = pixels[0].length;
+        if (image == null) {
+            image = new BufferedImage(w, h, TYPE_BYTE_GRAY);
+        }
+        WritableRaster raster = image.getRaster();
+        for (int row = 0; row < h; row++) {
+            int[] g = pixels[row];
+            raster.setPixels(0, row, w, 1, g);
         }
         return image;
     }
 
     private int[] getGrayPixelArray(int value) {
-        return colorCache.get(value);
+        return grayArrayCache.get(value);
     }
 
     private int getGrayPixel(int value) {
-        int v = value;
-        if (v < 0) {
-            v = 0;
+        if (value < 0) {
+            return grayCache.get(0);
         }
-        if (v > 255) {
-            v = 255;
+        if (value > 255) {
+            return grayCache.get(0);
         }
-        return 0xff000000 | (v << 16) | (v << 8) | v;
+        return grayCache.get(value);
     }
 
     private double inverseLerp(double a, double b, double t) {

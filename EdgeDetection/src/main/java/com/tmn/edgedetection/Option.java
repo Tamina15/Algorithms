@@ -37,7 +37,7 @@ public class Option {
     }
 
     public void setNumDev(double numDev) {
-        this.numDev = numDev > 0 ? numDev : 0;
+        this.numDev = numDev;
     }
 
     public double getLowFraction() {

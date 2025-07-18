@@ -81,6 +81,7 @@ public class Panel extends JPanel {
                 if (c == KeyEvent.VK_S) {
                     option.setLowFraction(option.getLowFraction() - 0.01);
                 }
+                doUpdate = true;
             }
 
             @Override
@@ -90,7 +91,7 @@ public class Panel extends JPanel {
                     zoomMutiplier = 1.05;
                 }
                 if (c == KeyEvent.VK_Q || c == KeyEvent.VK_A || c == KeyEvent.VK_W || c == KeyEvent.VK_S) {
-                    doUpdate = true;
+//                    doUpdate = true;
                 }
             }
         });
@@ -176,7 +177,7 @@ public class Panel extends JPanel {
 
     private void getImage() {
         try {
-            File file = new File("sample-1.jpg");
+            File file = new File("sample-3.jpg");
             image = ImageIO.read(file);
         } catch (MalformedURLException ex) {
             Logger.getLogger(Panel.class.getName()).log(Level.SEVERE, null, ex);
