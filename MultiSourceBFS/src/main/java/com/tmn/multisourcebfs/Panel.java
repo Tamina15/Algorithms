@@ -16,8 +16,9 @@ import javax.swing.SwingUtilities;
 public class Panel extends JPanel {
 
     private final int width, height;
-    private Point origin = new Point(0, 0);
-    private Point mousePt = new Point(0, 0);
+    private final Point origin = new Point(0, 0);
+    private final Point oldOrigin = new Point(0, 0);
+    private final Point mousePt = new Point(0, 0);
     private double zoomFactor = 1;
     private int scale = 1;
     double delta;
@@ -33,7 +34,7 @@ public class Panel extends JPanel {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isLeftMouseButton(e)) {
-                    mousePt.setLocation(e.getPoint());
+                    setAnchorPoint(e);
                 }
                 if (SwingUtilities.isRightMouseButton(e)) {
                 }
@@ -43,10 +44,7 @@ public class Panel extends JPanel {
         this.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                int dx = ((e.getX() - mousePt.x) * scale);
-                int dy = ((e.getY() - mousePt.y) * scale);
-                mousePt.setLocation(e.getX(), e.getY());
-                origin.setLocation(origin.getX() + dx, origin.getY() + dy);
+                move(e);
             }
         });
 
@@ -69,6 +67,17 @@ public class Panel extends JPanel {
 
     public Panel() {
         this(Toolkit.getDefaultToolkit().getScreenSize());
+    }
+
+    private void setAnchorPoint(MouseEvent e) {
+        oldOrigin.setLocation(origin);
+        mousePt.setLocation(e.getPoint());
+    }
+
+    private void move(MouseEvent e) {
+        double dx = ((e.getX() - mousePt.x) / zoomFactor);
+        double dy = ((e.getY() - mousePt.y) / zoomFactor);
+        origin.setLocation(oldOrigin.getX() + dx, oldOrigin.getY() + dy);
     }
 
     private void init() {
