@@ -9,6 +9,7 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  *
@@ -80,10 +81,10 @@ public class QuadTree {
     }
 
     public ArrayList<MovingPoint> query(Rectangle.Double range) {
-        return query(range, new ArrayList<>());
+        return (ArrayList<MovingPoint>) query(range, new ArrayList<>());
     }
 
-    public ArrayList<MovingPoint> query(Rectangle.Double range, ArrayList<MovingPoint> found) {
+    public Collection<MovingPoint> query(Rectangle.Double range, Collection<MovingPoint> found) {
         if (!boundary.intersects(range)) {
             return found;
         }

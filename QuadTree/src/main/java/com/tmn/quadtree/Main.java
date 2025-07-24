@@ -29,7 +29,7 @@ public class Main {
         f.add(p);
         f.pack();
         f.setLocationRelativeTo(null);
-        
+
         final int FPS = 60;
         final int UPS = 60;
         Thread drawThread = Thread.startVirtualThread(() -> {

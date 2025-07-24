@@ -1,12 +1,13 @@
 package com.tmn.quadtree;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -29,7 +30,7 @@ public class Panel extends JPanel {
     private final Point origin = new Point(0, 0);
     private final Point oldOrigin = new Point(0, 0);
     private final Point mousePt = new Point(0, 0);
-    private double zoomFactor = 1, zoomDelta = 0.02;
+    private double zoomFactor = 1, zoomDelta = 0.02, zoomMultiplier = 1.05;
 
     Random random = new Random();
     int n = 1500;
@@ -82,6 +83,7 @@ public class Panel extends JPanel {
                 int c = e.getKeyCode();
                 if (c == KeyEvent.VK_CONTROL) {
                     zoomDelta = 0.15;
+                    zoomMultiplier = 1.15;
                 }
             }
 
@@ -90,9 +92,22 @@ public class Panel extends JPanel {
                 int c = e.getKeyCode();
                 if (c == KeyEvent.VK_CONTROL) {
                     zoomDelta = 0.05;
+                    zoomMultiplier = 1.05;
                 }
             }
+        });
 
+        Panel panel = this;
+        this.addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent componentEvent) {
+                int dx = panel.getWidth() - panel.width;
+                int dy = panel.getHeight() - panel.height;
+                panel.width = panel.getWidth();
+                panel.height = panel.getHeight();
+                originalViewPort.width += dx;
+                originalViewPort.height += dy;
+                centerViewPort();
+            }
         });
 
         newViewPort();
@@ -103,8 +118,8 @@ public class Panel extends JPanel {
 
         collisionLength = 50;
         for (int i = 0; i < n; i++) {
-            Point p = new Point(random.nextInt((int) boundary.width), random.nextInt((int) boundary.height));
-            Point v = new Point(random.nextInt(-5, 5), random.nextInt(-5, 5));
+            Point p = new Point(random.nextDouble(boundary.width), random.nextDouble(boundary.height));
+            Point v = new Point(random.nextDouble(-5, 5), random.nextDouble(-5, 5));
             MovingPoint mp = new MovingPoint(p, v, boundary, collisionLength);
             points.add(mp);
             qtree.insert(mp);
@@ -112,9 +127,6 @@ public class Panel extends JPanel {
 
         newFounds = new ArrayList<>(n);
         collideds = new ArrayList<>(n);
-
-        MovingPoint tracker = points.getFirst();
-        tracker.position.setLocation(width / 2, height / 2);
 
     }
 
@@ -126,6 +138,13 @@ public class Panel extends JPanel {
         int oY = (height - h) / 2 - halfBuffer;
         this.viewPort = new Rectangle2D.Double(oX, oY, w + viewPortBuffer, h + viewPortBuffer);
         this.originalViewPort = new Rectangle2D.Double(oX, oY, w + viewPortBuffer, h + viewPortBuffer);
+    }
+
+    private void centerViewPort() {
+        viewPort.width = originalViewPort.width / zoomFactor;
+        viewPort.height = originalViewPort.height / zoomFactor;
+        viewPort.x = (originalViewPort.x - origin.x) / zoomFactor;
+        viewPort.y = (originalViewPort.y - origin.y) / zoomFactor;
     }
 
     private void setAnchorPoint(MouseEvent e) {
@@ -145,20 +164,20 @@ public class Panel extends JPanel {
         // Zoom in
         boolean zoomIn = true;
         if (e.getWheelRotation() < 0) {
-            zoomFactor += zoomDelta;
+//            zoomFactor += zoomDelta;
+            zoomFactor *= zoomMultiplier;
         }
         // Zoom out
         if (e.getWheelRotation() > 0) {
             zoomIn = false;
-            zoomFactor -= zoomDelta;
-            if (zoomFactor < zoomDelta) {
-                zoomFactor = zoomDelta;
-            }
+//            zoomFactor -= zoomDelta;
+            zoomFactor /= zoomMultiplier;
         }
-        viewPort.width = originalViewPort.width / zoomFactor;
-        viewPort.height = originalViewPort.height / zoomFactor;
-        viewPort.x = (originalViewPort.x - origin.x) / zoomFactor;
-        viewPort.y = (originalViewPort.y - origin.y) / zoomFactor;
+        zoomFactor = Math.clamp(zoomFactor, 0.01, 5);
+        if (Math.abs(zoomFactor - 1.0) < 0.01) {
+            zoomFactor = 1;
+        }
+        centerViewPort();
     }
 
     @Override
@@ -173,29 +192,12 @@ public class Panel extends JPanel {
         g2d.setColor(Color.white);
         g2d.setFont(new Font("Times New Roman", Font.BOLD, 20));
 
-        g2d.drawLine(0, 0, width, 0);
-        g2d.drawLine(0, 0, 0, height);
-        g2d.drawLine(width, 0, width, height);
-        g2d.drawLine(0, height, width, height);
-
         long s = System.nanoTime();
 
-        g2d.draw(qtree.boundary);
+//        qtree.draw(g2d, viewPort);
         drawTree(g2d, qtree);
 
-        g2d.setColor(Color.red);
-        g2d.draw(viewPort);
-        int ox = (int) (viewPort.x + viewPort.width / 2);
-        int oy = (int) (viewPort.y + viewPort.height / 2);
-        g2d.setStroke(new BasicStroke(5));
-        g2d.drawLine(ox, oy, ox, oy);
-        g2d.setStroke(new BasicStroke(1));
-
-        g2d.setColor(Color.blue);
-        g2d.draw(originalViewPort);
-
         long e = System.nanoTime();
-
         g2d.setTransform(at);
 
         g2d.drawString("time: " + (e - s) * 1.0 / 1_000_000 + "ms", 0, 30);
@@ -249,18 +251,25 @@ public class Panel extends JPanel {
 
     public void drawTree(Graphics2D g2d, QuadTree tree) {
         if (tree.boundary.intersects(viewPort)) {
+            g2d.setColor(Color.white);
+            g2d.draw(tree.boundary);
+            ArrayList<MovingPoint> cs = new ArrayList<>();
             for (int i = 0; i < tree.pointsIndex; i++) {
                 MovingPoint mp = tree.points[i];
                 if (collideds.contains(mp)) {
-                    g2d.setColor(Color.green);
-                } else {
-                    g2d.setColor(Color.white);
+                    cs.add(mp);
+                    continue;
                 }
                 Point.Double p = mp.position;
                 g2d.drawLine((int) p.x, (int) p.y, (int) p.x, (int) p.y);
                 g2d.draw(mp.collisionBox);
             }
-            g2d.setColor(Color.white);
+            g2d.setColor(Color.green);
+            for (MovingPoint mp : cs) {
+                Point.Double p = mp.position;
+                g2d.drawLine((int) p.x, (int) p.y, (int) p.x, (int) p.y);
+                g2d.draw(mp.collisionBox);
+            }
         }
         if (tree.isDivided) {
             drawTree(g2d, tree.ne);
