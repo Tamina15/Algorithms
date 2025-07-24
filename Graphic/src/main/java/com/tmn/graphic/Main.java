@@ -1,44 +1,23 @@
 package com.tmn.graphic;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
 public class Main {
 
-    public static void main(String[] args) throws InterruptedException {
-        Frame f = new Frame();
-        Panel p = new Panel(800, 800);
+    public static void main(String[] args) {
+        NPanel p = new NPanel(800,600);
+        NFrame f = new NFrame();
+        f.addWindowFocusListener(new WindowAdapter() {
+            public void windowGainedFocus(WindowEvent e) {
+                p.requestFocusInWindow();
+            }
+        });
         f.add(p);
         f.pack();
         f.setLocationRelativeTo(null);
 
-        Thread drawThread = Thread.startVirtualThread(() -> {
-            double delta = 0;
-            double interval = 1000000000 / 60;
-            long lastTime = System.nanoTime();
-            while (f.isEnabled()) {
-                long currentTime = System.nanoTime();
-                delta += (currentTime - lastTime) / interval;
-                lastTime = currentTime;
-                if (delta >= 1) {
-                    f.repaint();
-                    delta--;
-                }
-            }
-        });
-        Thread updateThread = Thread.startVirtualThread(() -> {
-            double delta = 0;
-            double interval = 1000000000 / 60;
-            long lastTime = System.nanoTime();
-            while (f.isEnabled()) {
-                long currentTime = System.nanoTime();
-                delta += (currentTime - lastTime) / interval;
-                lastTime = currentTime;
-                if (delta >= 1) {
-                    p.update();
-                    delta--;
-                }
-            }
-        });
-        drawThread.join();
-        updateThread.join();
-        System.out.println("Main");
+        NMain main = new NMain(f);
+        main.run();
     }
 }
