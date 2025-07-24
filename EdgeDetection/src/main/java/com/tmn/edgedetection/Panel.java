@@ -1,5 +1,6 @@
 package com.tmn.edgedetection;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -26,7 +27,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 public class Panel extends JPanel {
-
+    
     private int width, height;
     private final Point origin = new Point(0, 0);
     private final Point oldOrigin = new Point(0, 0);
@@ -34,7 +35,7 @@ public class Panel extends JPanel {
     private double zoomFactor = 1, zoomMutiplier = 1.05;
     private int scale = 1;
     double delta = 0;
-
+    
     public Panel(int width, int height) {
         this.width = width;
         this.height = height;
@@ -50,7 +51,7 @@ public class Panel extends JPanel {
                 }
             }
         });
-
+        
         this.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
@@ -59,11 +60,11 @@ public class Panel extends JPanel {
                 }
             }
         });
-
+        
         this.addMouseWheelListener((MouseWheelEvent e) -> {
             zoom(e);
         });
-
+        
         this.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -85,7 +86,7 @@ public class Panel extends JPanel {
                 }
                 doUpdate = true;
             }
-
+            
             @Override
             public void keyReleased(KeyEvent e) {
                 int c = e.getKeyCode();
@@ -97,23 +98,23 @@ public class Panel extends JPanel {
                 }
             }
         });
-
+        
         option = new Option(1, 0.3);
         getImage();
         initImages();
     }
-
+    
     private void setAnchorPoint(MouseEvent e) {
         oldOrigin.setLocation(origin);
         mousePt.setLocation(e.getPoint());
     }
-
+    
     private void move(MouseEvent e) {
-        double dx = ((e.getX() - mousePt.x) / zoomFactor);
-        double dy = ((e.getY() - mousePt.y) / zoomFactor);
+        double dx = ((e.getX() - mousePt.x));
+        double dy = ((e.getY() - mousePt.y));
         origin.setLocation(oldOrigin.getX() + dx, oldOrigin.getY() + dy);
     }
-
+    
     private void zoom(MouseWheelEvent e) {
         // Zoom in
         if (e.getWheelRotation() < 0) {
@@ -124,26 +125,26 @@ public class Panel extends JPanel {
             zoomFactor /= zoomMutiplier;
         }
     }
-
+    
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
         g2d.scale(zoomFactor, zoomFactor);
         g2d.translate(origin.x, origin.y);
-
+        
         draw(g2d);
         g2d.dispose();
     }
-
+    
     private int gap = 15;
-
+    
     private int drawImage(Graphics2D g2d, Image image, int x, int y, String label) {
         g2d.drawString(label, x, y - 15);
         g2d.drawImage(image, x, y, null);
         return x + image.getWidth(null) + gap;
     }
-
+    
     public void draw(Graphics2D g2d) {
         g2d.setColor(Color.white);
         g2d.setFont(new Font(null, 1, 40));
@@ -161,7 +162,7 @@ public class Panel extends JPanel {
         x = drawImage(g2d, doubleThreshold, x, 0, "Double Threshold");
         x = drawImage(g2d, hysteresis, x, 0, "Hysteresis");
         x = drawImage(g2d, image, x, 0, "Original");
-
+        
         x = 0;
         y = y + 250;
         x = drawImage(g2d, image, x, y, "Original");
@@ -175,16 +176,16 @@ public class Panel extends JPanel {
         x = drawImage(g2d, hysteresis1, x, y, "Hysteresis");
         x = drawImage(g2d, image, x, y, "Original");
     }
-
+    
     boolean doUpdate = false;
-
+    
     public void update() {
         if (doUpdate) {
             filter();
             doUpdate = false;
         }
     }
-
+    
     Option option;
     CannyEdgeDetection canny;
     CannyEdgeDetection canny1;
@@ -192,36 +193,36 @@ public class Panel extends JPanel {
     BufferedImage grayScaleImage, sobelX, sobelY, sobel, angles, nonMaxImage, doubleThreshold, hysteresis;
     BufferedImage grayScaleImage1, sobelX1, sobelY1, sobel1, angles1, nonMaxImage1, doubleThreshold1, hysteresis1;
     double pTime;
-
+    
     private void getImage() {
         try {
             URL url = URI.create("https://picsum.photos/1500").toURL();
             File file = new File("sample-4.jpg");
-            image = ImageIO.read(url);
+            image = ImageIO.read(file);
         } catch (MalformedURLException ex) {
             Logger.getLogger(Panel.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(Panel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     private void initImages() {
         if (image == null) {
             return;
         }
-
+        
         canny = new CannyEdgeDetection(image, option);
         canny1 = new CannyEdgeDetection(image, option);
-
+        
         filter();
-
+        
         grayScaleImage = canny.getGrayScaleImage();
         sobelX = canny.getSobelXImage();
         sobelY = canny.getSobelYImage();
         sobel = canny.getSobelImage();
         angles = canny.getAngleImage();
         nonMaxImage = canny.getNonMaximumSuppressionImage();
-
+        
         grayScaleImage1 = canny1.getGrayScaleImage();
         sobelX1 = canny1.getSobelXImage();
         sobelY1 = canny1.getSobelYImage();
@@ -229,26 +230,26 @@ public class Panel extends JPanel {
         angles1 = canny1.getAngleImage();
         nonMaxImage1 = canny1.getNonMaximumSuppressionImage();
     }
-
+    
     private void filter() {
         pTime = canny.filter();
         doubleThreshold = canny.getDoubleThesholdingImage();
         hysteresis = canny.getHysteresisImage();
-
+        
         canny1.filter();
         doubleThreshold1 = canny1.getDoubleThesholdingImage();
         hysteresis1 = canny1.getHysteresisImage();
-
+        
     }
-
+    
     public void setWidth(int width) {
         this.width = width;
         this.setPreferredSize(new Dimension(width, height));
     }
-
+    
     public void setHeight(int height) {
         this.height = height;
         this.setPreferredSize(new Dimension(width, height));
     }
-
+    
 }

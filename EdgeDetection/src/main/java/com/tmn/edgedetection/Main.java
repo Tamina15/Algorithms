@@ -15,6 +15,7 @@ public class Main {
         });
         f.add(p);
         f.pack();
+        f.setLocationRelativeTo(null);
         Thread drawThread = Thread.startVirtualThread(() -> {
             double delta = 0;
             double interval = 1000000000 / 60;
