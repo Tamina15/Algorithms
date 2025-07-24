@@ -17,6 +17,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -159,6 +161,19 @@ public class Panel extends JPanel {
         x = drawImage(g2d, doubleThreshold, x, 0, "Double Threshold");
         x = drawImage(g2d, hysteresis, x, 0, "Hysteresis");
         x = drawImage(g2d, image, x, 0, "Original");
+
+        x = 0;
+        y = y + 250;
+        x = drawImage(g2d, image, x, y, "Original");
+        x = drawImage(g2d, grayScaleImage1, x, y, "Gray scale");
+        x = drawImage(g2d, sobelX1, x, y, "Sobel X");
+        x = drawImage(g2d, sobelY1, x, y, "Sobel Y");
+        x = drawImage(g2d, sobel1, x, y, "Sobel Filter Gradient");
+        x = drawImage(g2d, angles1, x, y, "Gradient Angles");
+        x = drawImage(g2d, nonMaxImage1, x, y, "Non-max Suppression");
+        x = drawImage(g2d, doubleThreshold1, x, y, "Double Threshold");
+        x = drawImage(g2d, hysteresis1, x, y, "Hysteresis");
+        x = drawImage(g2d, image, x, y, "Original");
     }
 
     boolean doUpdate = false;
@@ -172,13 +187,17 @@ public class Panel extends JPanel {
 
     Option option;
     CannyEdgeDetection canny;
-    BufferedImage image, grayScaleImage, sobelX, sobelY, sobel, angles, nonMaxImage, doubleThreshold, hysteresis;
+    CannyEdgeDetection canny1;
+    BufferedImage image;
+    BufferedImage grayScaleImage, sobelX, sobelY, sobel, angles, nonMaxImage, doubleThreshold, hysteresis;
+    BufferedImage grayScaleImage1, sobelX1, sobelY1, sobel1, angles1, nonMaxImage1, doubleThreshold1, hysteresis1;
     double pTime;
 
     private void getImage() {
         try {
-            File file = new File("sample-3.jpg");
-            image = ImageIO.read(file);
+            URL url = URI.create("https://picsum.photos/1500").toURL();
+            File file = new File("sample-4.jpg");
+            image = ImageIO.read(url);
         } catch (MalformedURLException ex) {
             Logger.getLogger(Panel.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
@@ -190,20 +209,36 @@ public class Panel extends JPanel {
         if (image == null) {
             return;
         }
+
         canny = new CannyEdgeDetection(image, option);
+        canny1 = new CannyEdgeDetection(image, option);
+
         filter();
+
         grayScaleImage = canny.getGrayScaleImage();
         sobelX = canny.getSobelXImage();
         sobelY = canny.getSobelYImage();
         sobel = canny.getSobelImage();
         angles = canny.getAngleImage();
         nonMaxImage = canny.getNonMaximumSuppressionImage();
+
+        grayScaleImage1 = canny1.getGrayScaleImage();
+        sobelX1 = canny1.getSobelXImage();
+        sobelY1 = canny1.getSobelYImage();
+        sobel1 = canny1.getSobelImage();
+        angles1 = canny1.getAngleImage();
+        nonMaxImage1 = canny1.getNonMaximumSuppressionImage();
     }
 
     private void filter() {
         pTime = canny.filter();
         doubleThreshold = canny.getDoubleThesholdingImage();
         hysteresis = canny.getHysteresisImage();
+
+        canny1.filter();
+        doubleThreshold1 = canny1.getDoubleThesholdingImage();
+        hysteresis1 = canny1.getHysteresisImage();
+
     }
 
     public void setWidth(int width) {
