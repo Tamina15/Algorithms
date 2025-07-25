@@ -19,7 +19,7 @@ class Frame extends JFrame {
 public class Main {
 
     public static void main(String[] args) {
-        Panel p = new Panel();
+        Panel p = new Panel(800, 600);
         Frame f = new Frame();
         f.addWindowFocusListener(new WindowAdapter() {
             public void windowGainedFocus(WindowEvent e) {
@@ -29,7 +29,7 @@ public class Main {
         f.add(p);
         f.pack();
         f.setLocationRelativeTo(null);
-        f.setExtendedState(JFrame.MAXIMIZED_BOTH); // Maximize the JFrame
+//        f.setExtendedState(JFrame.MAXIMIZED_BOTH); // Maximize the JFrame
 
         final int FPS = 60;
         final int UPS = 60;

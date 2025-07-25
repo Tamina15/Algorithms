@@ -30,8 +30,8 @@ public class QuadTree {
 
     public QuadTree(Rectangle.Double boundary, int maxCapacity) {
         this.boundary = boundary;
-        midX = this.boundary.x + this.boundary.width / 2;
-        midY = this.boundary.y + this.boundary.height / 2;
+        midX = this.boundary.getCenterX();
+        midY = this.boundary.getCenterY();
         halfWidth = this.boundary.width / 2;
         halfHeight = this.boundary.height / 2;
         this.maxCapacity = maxCapacity;
@@ -89,10 +89,17 @@ public class QuadTree {
     }
 
     public ArrayList<MovingPoint> query(Rectangle.Double range) {
-        return (ArrayList<MovingPoint>) query(range, new ArrayList<>());
+        return (ArrayList<MovingPoint>) query0(range, new ArrayList<>());
     }
 
-    public Collection<MovingPoint> query(Rectangle.Double range, Collection<MovingPoint> found) {
+    public ArrayList<MovingPoint> query(Rectangle.Double range, Collection<MovingPoint> found) {
+        if (found == null) {
+            found = new ArrayList<>(5 * maxCapacity);
+        }
+        return (ArrayList<MovingPoint>) query0(range, found);
+    }
+
+    private Collection<MovingPoint> query0(Rectangle.Double range, Collection<MovingPoint> found) {
         if (!boundary.intersects(range)) {
             return found;
         }
@@ -134,14 +141,28 @@ public class QuadTree {
     }
 
     public void draw(Graphics2D g2d, Rectangle2D.Double viewPort) {
-        if (boundary.intersects(viewPort)) {
-            draw0(g2d);
+        if (!boundary.intersects(viewPort)) {
+            return;
         }
+        draw0(g2d);
         if (isDivided) {
             ne.draw(g2d, viewPort);
             nw.draw(g2d, viewPort);
             se.draw(g2d, viewPort);
             sw.draw(g2d, viewPort);
+        }
+    }
+
+    public void drawBoundary(Graphics2D g2d, Rectangle2D.Double viewPort) {
+        if (!boundary.intersects(viewPort)) {
+            return;
+        }
+        g2d.draw(boundary);
+        if (isDivided) {
+            ne.drawBoundary(g2d, viewPort);
+            nw.drawBoundary(g2d, viewPort);
+            se.drawBoundary(g2d, viewPort);
+            sw.drawBoundary(g2d, viewPort);
         }
     }
 
