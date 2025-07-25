@@ -6,6 +6,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.KeyAdapter;
@@ -25,11 +26,14 @@ public class Panel extends JPanel {
 
     int width;
     int height;
+
     private final int viewPortBuffer = 150;
     private Rectangle.Double originalViewPort, viewPort;
+
     private final Point origin = new Point(0, 0);
     private final Point oldOrigin = new Point(0, 0);
     private final Point mousePt = new Point(0, 0);
+
     private double zoomFactor = 1, zoomDelta = 0.02, zoomMultiplier = 1.05;
 
     Random random = new Random();
@@ -38,9 +42,17 @@ public class Panel extends JPanel {
     QuadTree qtree;
 
     ArrayList<MovingPoint> points;
-    ArrayList<MovingPoint> collideds, newFounds;
+    ArrayList<MovingPoint> collideds, founds;
     double collisionLength;
     double updateTime;
+
+    public Panel(Dimension d) {
+        this(d.width, d.height);
+    }
+
+    public Panel() {
+        this(Toolkit.getDefaultToolkit().getScreenSize());
+    }
 
     public Panel(int width, int height) {
         this.width = width;
@@ -99,13 +111,17 @@ public class Panel extends JPanel {
 
         Panel panel = this;
         this.addComponentListener(new ComponentAdapter() {
+            @Override
             public void componentResized(ComponentEvent componentEvent) {
-                int dx = panel.getWidth() - panel.width;
-                int dy = panel.getHeight() - panel.height;
+                double dx = panel.getWidth() - panel.width;
+                double dy = panel.getHeight() - panel.height;
+
                 panel.width = panel.getWidth();
                 panel.height = panel.getHeight();
-                originalViewPort.width += dx;
-                originalViewPort.height += dy;
+
+                originalViewPort.x += dx / 2;
+                originalViewPort.y += dy / 2;
+
                 centerViewPort();
             }
         });
@@ -125,9 +141,8 @@ public class Panel extends JPanel {
             qtree.insert(mp);
         }
 
-        newFounds = new ArrayList<>(n);
+        founds = new ArrayList<>(n);
         collideds = new ArrayList<>(n);
-
     }
 
     private void newViewPort() {
@@ -236,10 +251,10 @@ public class Panel extends JPanel {
         ArrayList<MovingPoint> newCollideds = new ArrayList<>(n / 2);
         for (MovingPoint p : points) {
             if (viewPort.contains(p.position)) {
-                newFounds.clear();
-                qtree.query(p.range, newFounds);
-                for (int i = 0; i < newFounds.size(); i++) {
-                    MovingPoint f = newFounds.get(i);
+                founds.clear();
+                qtree.query(p.range, founds);
+                for (int i = 0; i < founds.size(); i++) {
+                    MovingPoint f = founds.get(i);
                     if (p != f && p.collide(f)) {
                         newCollideds.add(f);
                     }

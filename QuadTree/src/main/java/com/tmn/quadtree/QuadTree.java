@@ -70,14 +70,22 @@ public class QuadTree {
 
     private void subDivide() {
         isDivided = true;
-        Rectangle.Double NEboundary = new Rectangle.Double(midX, boundary.y, halfWidth, halfHeight);
-        Rectangle.Double NWboundary = new Rectangle.Double(boundary.x, boundary.y, halfWidth, halfHeight);
-        Rectangle.Double SEboundary = new Rectangle.Double(midX, midY, halfWidth, halfHeight);
-        Rectangle.Double SWboundary = new Rectangle.Double(boundary.x, midY, halfWidth, halfHeight);
-        ne = new QuadTree(NEboundary, maxCapacity);
-        nw = new QuadTree(NWboundary, maxCapacity);
-        se = new QuadTree(SEboundary, maxCapacity);
-        sw = new QuadTree(SWboundary, maxCapacity);
+        if (ne == null) {
+            Rectangle.Double NEboundary = new Rectangle.Double(midX, boundary.y, halfWidth, halfHeight);
+            ne = new QuadTree(NEboundary, maxCapacity);
+        }
+        if (nw == null) {
+            Rectangle.Double NWboundary = new Rectangle.Double(boundary.x, boundary.y, halfWidth, halfHeight);
+            nw = new QuadTree(NWboundary, maxCapacity);
+        }
+        if (se == null) {
+            Rectangle.Double SEboundary = new Rectangle.Double(midX, midY, halfWidth, halfHeight);
+            se = new QuadTree(SEboundary, maxCapacity);
+        }
+        if (sw == null) {
+            Rectangle.Double SWboundary = new Rectangle.Double(boundary.x, midY, halfWidth, halfHeight);
+            sw = new QuadTree(SWboundary, maxCapacity);
+        }
     }
 
     public ArrayList<MovingPoint> query(Rectangle.Double range) {
