@@ -6,18 +6,18 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>LeetCode</module>
         <module>Algorithm</module>
+        <module>CellularAutomata</module>
+        <module>EdgeDetection</module>
         <module>FlockingSimulation</module>
-        <module>QuadTree</module>
+        <module>Graphic</module>
+        <module>LeetCode</module>
         <module>MultiSourceBFS</module>
         <module>OpenSimplexNoise</module>
+        <module>QuadTree</module>
         <module>../PixelSort</module>
         <module>../Sort</module>
         <module>../Rug</module>
-        <module>CellularAutomata</module>
-        <module>Graphic</module>
-        <module>EdgeDetection</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

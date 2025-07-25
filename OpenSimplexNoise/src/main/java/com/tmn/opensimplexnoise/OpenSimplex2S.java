@@ -1,8 +1,7 @@
 package com.tmn.opensimplexnoise;
 
 /**
- *
- * @author nhat.tranminh
+ * https://github.com/KdotJPG/OpenSimplex2/blob/master/java/OpenSimplex2S.java
  */
 public class OpenSimplex2S {
 

@@ -75,8 +75,8 @@ public class Panel extends JPanel {
     }
 
     private void move(MouseEvent e) {
-        double dx = ((e.getX() - mousePt.x) / zoomFactor);
-        double dy = ((e.getY() - mousePt.y) / zoomFactor);
+        double dx = ((e.getX() - mousePt.x));
+        double dy = ((e.getY() - mousePt.y));
         origin.setLocation(oldOrigin.getX() + dx, oldOrigin.getY() + dy);
     }
 
@@ -89,8 +89,8 @@ public class Panel extends JPanel {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-        g2d.scale(zoomFactor, zoomFactor);
         g2d.translate(origin.x, origin.y);
+        g2d.scale(zoomFactor, zoomFactor);
 
         // draw here
         bfs.draw(g2d);

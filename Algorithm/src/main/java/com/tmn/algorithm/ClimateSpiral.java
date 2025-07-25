@@ -22,8 +22,6 @@ import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-
-
 /**
  *
  * @author Tran Minh Nhat
@@ -32,7 +30,6 @@ public class ClimateSpiral extends JPanel {
 
     int panelWidth = 800;
     int panelHeight = 800;
-    String prefix = "src/main/java/com/mycompany/algorithm/";
     Random random = new Random();
     ArrayList<ArrayList<String>> table;
     List<String> months;
@@ -45,7 +42,7 @@ public class ClimateSpiral extends JPanel {
         this.setDoubleBuffered(true);
         this.setBackground(Color.black);
         this.setFocusable(true);
-        table = readCSV(prefix + "GlobalTempMean.csv");
+        table = readCSV("public/GlobalTempMean.csv");
         months = table.get(0).subList(1, 13);
         years = new ArrayList();
         rowCount = table.size() - 1;
@@ -112,7 +109,7 @@ public class ClimateSpiral extends JPanel {
             double y = (monthCircle / 2 + stringWidth) * Math.sin((i * Math.PI / 6) - Math.PI / 3);
             g2d.drawString(months.get(i), (int) x - stringWidth / 2, (int) y + fontWidth / 4);
         }
-        int year = years.get(prei% rowCount);
+        int year = years.get(prei % rowCount);
         String month = months.get(currentj);
         String my = month + "/" + year;
         g2d.drawString(my, 0 - metrics.stringWidth(my) / 2, fontWidth / 4);
