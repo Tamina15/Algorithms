@@ -105,27 +105,6 @@ public class QuadTree {
         return found;
     }
 
-    public FixedList<MovingPoint> queryFixed(Rectangle.Double range, FixedList<MovingPoint> found) {
-        if (!boundary.intersects(range)) {
-            return found;
-        }
-        for (int i = 0; i < pointsIndex; i++) {
-            MovingPoint mp = points[i];
-            Point.Double p = mp.position;
-            if (range.contains(p)) {
-                found.add(mp);
-            }
-        }
-        if (isDivided) {
-            ne.queryFixed(range, found);
-            nw.queryFixed(range, found);
-            se.queryFixed(range, found);
-            sw.queryFixed(range, found);
-        }
-
-        return found;
-    }
-
     private void draw0(Graphics2D g2d) {
 //        g2d.draw(boundary);
         for (int i = 0; i < pointsIndex; i++) {
