@@ -50,10 +50,11 @@ public class XiaolinWuLineAlgorithm {
         int count = 0;
 
         public void plot(Graphics2D g2d, double x, double y, double alpha) {
-            g2d.setColor(new Color(255, 255, 255, (int) alpha));
+            g2d.setColor(new Color(255, 255, 255, (int) (alpha * 255)));
+//            g2d.setColor(Color.white);
             g2d.drawLine((int) x, (int) y, (int) x, (int) y);
             if (count == 0) {
-                System.out.println((int) x + " " + (int) y + " " + (int) alpha);
+                System.out.println(x + " " + y + " " + alpha);
             }
         }
 
@@ -163,12 +164,7 @@ public class XiaolinWuLineAlgorithm {
             g2d.translate(oX, oY);
             ///////////
 
-//            drawLine(0, 0, panelWidth / 2, panelHeight, g2d);
-//            drawLine(0, 0, 100, 100, g2d);
-//            drawLine(0, 0, 200, 200, g2d);
-//            drawLine(0, 0, 300, 300, g2d);
-//            drawLine(0, 0, 400, 400, g2d);
-            drawLine(0, 0, 500, 500, g2d);
+            drawLine(0, 0, 500, 400, g2d);
             g2d.dispose();
             g.dispose();
         }

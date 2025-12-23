@@ -46,6 +46,15 @@ public class KMPStringSearch {
     }
 
     public static void main(String[] args) {
-        System.out.println(search("aaaxaaaax", "aaaa"));
+        String s = "aaaxaaaax";
+        String a = "aaaa";
+        int i = search(s, a);
+        if (i >= 0) {
+            System.out.println(s);
+            System.out.println(" ".repeat(i) + a);
+
+        } else {
+            System.out.println("Not found");
+        }
     }
 }
