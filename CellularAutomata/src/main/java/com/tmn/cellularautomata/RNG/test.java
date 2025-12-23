@@ -1,4 +1,4 @@
-package com.tmn.cellularautomata.randomgenerator;
+package com.tmn.cellularautomata.RNG;
 
 import java.util.HashSet;
 import java.util.Random;
@@ -28,13 +28,11 @@ public class test {
             b = r.nextBoolean();
             e = System.nanoTime();
             time += (e - s);
-            if (n < 100_000) {
-                intSet.add(i);
-                longSet.add(l);
-                doubleSet.add(d);
-                floatSet.add(f);
-                booleanCount = booleanCount + (b ? 1 : -1);
-            }
+            intSet.add(i);
+            longSet.add(l);
+            doubleSet.add(d);
+            floatSet.add(f);
+            booleanCount = booleanCount + (b ? 1 : -1);
         }
         System.out.print("Int: " + intSet.size());
         System.out.print(", Long: " + longSet.size());
@@ -47,7 +45,7 @@ public class test {
     public static void main(String[] args) {
         long s = System.nanoTime();
         Random r = new Random(s);
-        Random ca = new CARandom(s);
+        Random ca = new CARandom2(s);
         for (int i = 0; i < 100; i++) {
             R(r);
             R(ca);

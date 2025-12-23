@@ -1,4 +1,4 @@
-package com.tmn.cellularautomata.randomgenerator;
+package com.tmn.cellularautomata.RNG;
 
 import java.util.Random;
 

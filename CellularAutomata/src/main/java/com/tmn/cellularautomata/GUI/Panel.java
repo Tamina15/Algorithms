@@ -23,9 +23,10 @@ import javax.swing.SwingUtilities;
 public class Panel extends JPanel {
 
     private final int width, height;
-    private Point origin = new Point(0, 0);
-    private Point mousePt = new Point(0, 0);
-    private double zoomFactor = 1;
+    private final Point origin = new Point(0, 0);
+    private final Point oldOrigin = new Point(0, 0);
+    private final Point mousePt = new Point(0, 0);
+    private double zoomFactor = 1, zoomDelta = 0.02, zoomMultiplier = 1.05;
     private int scale = 1;
     int fps, ups;
 
@@ -40,7 +41,7 @@ public class Panel extends JPanel {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isLeftMouseButton(e)) {
-                    mousePt.setLocation(e.getPoint());
+                    setAnchorPoint(e);
                 }
             }
         });
@@ -49,23 +50,13 @@ public class Panel extends JPanel {
             @Override
             public void mouseDragged(MouseEvent e) {
                 if (SwingUtilities.isLeftMouseButton(e)) {
-                    int dx = (int) ((e.getX() - mousePt.x) * scale);
-                    int dy = (int) ((e.getY() - mousePt.y) * scale);
-                    mousePt.setLocation(e.getX(), e.getY());
-                    origin.setLocation(origin.getX() + dx, origin.getY() + dy);
+                    move(e);
                 }
             }
         });
 
         this.addMouseWheelListener((MouseWheelEvent e) -> {
-            // Zoom in
-            if (e.getWheelRotation() < 0) {
-                zoomFactor *= 1.1;
-            }
-            // Zoom out
-            if (e.getWheelRotation() > 0) {
-                zoomFactor /= 1.1;
-            }
+            zoom(e);
         });
 
         init();
@@ -97,8 +88,38 @@ public class Panel extends JPanel {
         this(Toolkit.getDefaultToolkit().getScreenSize());
     }
 
+    private void setAnchorPoint(MouseEvent e) {
+        oldOrigin.setLocation(origin);
+        mousePt.setLocation(e.getPoint());
+    }
+
+    private void move(MouseEvent e) {
+        double dx = ((e.getX() - mousePt.x));
+        double dy = ((e.getY() - mousePt.y));
+        origin.setLocation(oldOrigin.x + dx, oldOrigin.y + dy);
+    }
+
+    private void zoom(MouseWheelEvent e) {
+        // Zoom in
+        boolean zoomIn = true;
+        if (e.getWheelRotation() < 0) {
+//            zoomFactor += zoomDelta;
+            zoomFactor *= zoomMultiplier;
+        }
+        // Zoom out
+        if (e.getWheelRotation() > 0) {
+            zoomIn = false;
+//            zoomFactor -= zoomDelta;
+            zoomFactor /= zoomMultiplier;
+        }
+        zoomFactor = Math.clamp(zoomFactor, 0.01, 10);
+        if (Math.abs(zoomFactor - 1.0) < 0.01) {
+            zoomFactor = 1;
+        }
+    }
+
     private void init() {
-        int length = 128;
+        int length = Long.SIZE * 3 ;
         int[] initital = new int[length / 3];
         Random r = new Random();
         for (int i = 0; i < initital.length; i++) {
@@ -107,8 +128,8 @@ public class Panel extends JPanel {
 //        ca = new CellularAutomata(100, width, height);
 //        ca = new CellularAutomata(length, width, height);
         long seed = r.nextLong();
-        ca = new CellularAutomata(length);
-        wca = new WrappedCellularAutomata(length);
+        ca = new CellularAutomata(length, seed);
+        wca = new WrappedCellularAutomata(length, seed);
         rca = new CellularAutomata(length, 0L);
         rwca = new WrappedCellularAutomata(length, 0L);
     }
@@ -118,8 +139,8 @@ public class Panel extends JPanel {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g.create();
         AffineTransform at = g2d.getTransform();
-        g2d.scale(zoomFactor, zoomFactor);
         g2d.translate(origin.x, origin.y);
+        g2d.scale(zoomFactor, zoomFactor);
 
         // draw here
         ca.draw(g2d);
@@ -129,10 +150,9 @@ public class Panel extends JPanel {
         ///////////////
 
         g2d.setColor(Color.red);
-        g2d.drawString("FPS: " + fps, 0, -10);
-        g2d.drawString("UPS: " + ups, 0, -20);
-
         g2d.setTransform(at);
+        g2d.drawString("FPS: " + fps, 0, 10);
+        g2d.drawString("UPS: " + ups, 0, 20);
     }
 
     CellularAutomata ca, rca;

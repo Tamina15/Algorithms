@@ -1,6 +1,6 @@
-package com.tmn.cellularautomata.randomgenerator;
+package com.tmn.cellularautomata.RNG;
 
-import java.util.random.RandomGenerator;
+import java.util.Random;
 
 /**
  * The CARandom2 class implements a random number generator
@@ -10,13 +10,14 @@ import java.util.random.RandomGenerator;
  * can be in one of two states (0 or 1), represented by 3 {@code long} values.
  * The state of each cell in the next generation is determined by a fixed rule
  * that considers the current state of the cell and its two immediate neighbors.
- * <p>
+ * </p>
  * Example usage:
  * <pre>
  * CARandom2 rng = new CARandom2();
  * int randomNumber = rng.nextInt();
  * </pre>
  * <p>
+ * </p>
  * This class is not thread-safe.
  *
  * @implNote
@@ -31,12 +32,12 @@ import java.util.random.RandomGenerator;
  *
  * @author nhat.tranminh
  */
-public class CARandom4 implements RandomGenerator {
+public class CARandom2 extends Random {
 
     /**
      * Number of bits in 3 {@code long} values.
      */
-    private final int length = 192;
+    private final int length = Long.SIZE * 3;
 
     /**
      * Padding to increase randomness in case {@link #seed} has low entropy
@@ -46,7 +47,7 @@ public class CARandom4 implements RandomGenerator {
      * <p/>
      * This number is chosen arbitrarily.
      */
-    private static final int[] randomPadding = toBinaryArray(1515151515151515151l);
+    private static final int[] randomPadding = toBinaryArray(1515151515151515151L);
 
     /**
      * The initial state of the automaton
@@ -61,7 +62,7 @@ public class CARandom4 implements RandomGenerator {
     /**
      * Creates a new random number generator with a random seed.
      */
-    public CARandom4() {
+    public CARandom2() {
         this(System.nanoTime());
     }
 
@@ -72,7 +73,7 @@ public class CARandom4 implements RandomGenerator {
      * @param seed the initial seed
      * @see #setSeed(long)
      */
-    public CARandom4(long seed) {
+    public CARandom2(long seed) {
         this.seed = seed;
         init();
     }
@@ -82,8 +83,8 @@ public class CARandom4 implements RandomGenerator {
      * The method performs the following steps:
      * <ul>
      * <li>Converts the seed to a binary array.</li>
-     * <li>Reverses the binary array.</li>
-     * <li>Interleaves the binary array, {@link randomPadding}
+     * <li>Reverses the seed binary array.</li>
+     * <li>Interleaves the seed binary array, {@link randomPadding}
      * and the reversed seed binary array to create the initial state array.</li>
      * <li>Split the initial state array into {@link left}, {@link mid}, and {@link right}.</li>
      * </ul>
@@ -96,10 +97,10 @@ public class CARandom4 implements RandomGenerator {
         int[] seeds = toBinaryArray(seed);
         int[] reversedSeeds = newReversedArray(seeds);
         int[] cells = interleave(length, seeds, randomPadding, reversedSeeds);
-        for (int i = 0; i < 64; i++) {
+        for (int i = 0; i < Long.SIZE; i++) {
             left = (left << 1) + cells[i];
-            mid = (mid << 1) + cells[i + 64];
-            right = (right << 1) + cells[i + 128];
+            mid = (mid << 1) + cells[i + Long.SIZE];
+            right = (right << 1) + cells[i + (Long.SIZE * 2)];
         }
     }
 
@@ -108,8 +109,11 @@ public class CARandom4 implements RandomGenerator {
      */
     private int switcher;
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
-    public long nextLong() {
+    protected int next(int bits) {
         next();
         switcher = (switcher + 1) % 3;
         long result = switch (switcher) {
@@ -120,7 +124,7 @@ public class CARandom4 implements RandomGenerator {
             default ->
                 mid;
         };
-        return result;
+        return (int) (result >>> (Long.SIZE - bits));
     }
 
     /**
@@ -142,18 +146,19 @@ public class CARandom4 implements RandomGenerator {
      * {@code right} left-shifted once.
      */
     private void next() {
-        long nextA = ((left << 1) | (mid >>> 63)) ^ left ^ (left >>> 1);
-        long nextB = ((mid << 1) | (right >>> 63)) ^ mid ^ ((mid >>> 1) | ((left & 1) << 63));
-        long nextC = (right << 1) ^ right ^ ((right >>> 1) | ((mid & 1) << 63));
+        int lengthMinusOne = Long.SIZE - 1;
+        long nextA = ((left << 1) | (mid >>> lengthMinusOne)) ^ left ^ (left >>> 1);
+        long nextB = ((mid << 1) | (right >>> lengthMinusOne)) ^ mid ^ ((mid >>> 1) | ((left & 1) << lengthMinusOne));
+        long nextC = (right << 1) ^ right ^ ((right >>> 1) | ((mid & 1) << lengthMinusOne));
         left = nextA;
         mid = nextB;
         right = nextC;
     }
 
-    private long nextGeneration(long left, long mid, long right) {
-        return ((mid << 1) | (right >>> 63)) ^ mid ^ ((mid >>> 1) | ((left & 1) << 63));
-    }
-
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void setSeed(long seed) {
         this.seed = seed;
         init();
@@ -183,8 +188,8 @@ public class CARandom4 implements RandomGenerator {
      *         padded with zeros if necessary to meet the length of 64.
      */
     private static int[] toBinaryArray(long number) {
-        String string = String.format("%" + 64 + "s", Long.toBinaryString(number)).replace(' ', '0');
-        int[] array = string.chars().map((operand) -> operand - 48 /* '0' = 48 */).toArray();
+        String string = String.format("%" + Long.SIZE + "s", Long.toBinaryString(number)).replace(' ', '0');
+        int[] array = string.chars().map((operand) -> operand - '0').toArray();
         return array;
     }
 
@@ -195,9 +200,10 @@ public class CARandom4 implements RandomGenerator {
      * @return a new array
      */
     private static int[] newReversedArray(int[] array) {
-        int[] reverse = new int[array.length];
-        for (int i = 0; i < reverse.length; i++) {
-            reverse[i] = array[array.length - 1 - i];
+        int l = array.length;
+        int[] reverse = new int[l];
+        for (int i = 0; i < l; i++) {
+            reverse[i] = array[l - 1 - i];
         }
         return reverse;
     }
@@ -213,5 +219,4 @@ public class CARandom4 implements RandomGenerator {
         }
         return b.toString();
     }
-
 }

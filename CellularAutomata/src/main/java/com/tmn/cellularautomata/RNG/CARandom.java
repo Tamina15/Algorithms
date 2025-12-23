@@ -1,4 +1,4 @@
-package com.tmn.cellularautomata.randomgenerator;
+package com.tmn.cellularautomata.RNG;
 
 import java.util.Random;
 
@@ -103,9 +103,11 @@ public class CARandom extends Random {
         }
         return (int) (result >>> (64 - bits));
     }
-    public byte nextByte(){
+
+    public byte nextByte() {
         return (byte) next(8);
     }
+
     /**
      * Convert an long value to its binary array representation,
      * padded with zero to ensure the result array's length is 64.
