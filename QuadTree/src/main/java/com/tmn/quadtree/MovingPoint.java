@@ -1,65 +1,70 @@
 package com.tmn.quadtree;
 
-import java.awt.Rectangle;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
-public class MovingPoint {
+public class MovingPoint extends Point2D.Double {
 
-    Rectangle.Double boundary, collisionBox, range;
-    Point position;
-    Point speed;
+    Rectangle2D.Double boundary, collisionBox, range;
+    double speedX, speedY;
     double collisionLength;
 
-    public MovingPoint(Point position, Point speed) {
-        this.position = position;
-        this.speed = speed;
+    public MovingPoint(Point2D position, Point2D speed) {
+        this.x = position.getX();
+        this.y = position.getY();
+        speedX = speed.getX();
+        speedY = speed.getY();
     }
 
-    public MovingPoint(Point position, Point speed, Rectangle.Double boundary) {
+    public MovingPoint(Point2D position, Point2D speed, Rectangle2D.Double boundary) {
         this(position, speed);
         this.boundary = boundary;
     }
 
-    public MovingPoint(Point position, Point speed, Rectangle.Double boundary, double collisionLength) {
+    public MovingPoint(Point2D position, Point2D speed, Rectangle2D.Double boundary, double collisionLength) {
         this(position, speed, boundary);
         this.collisionLength = collisionLength;
 
-        double collisionX = position.x - collisionLength / 2;
-        double collisionY = position.y - collisionLength / 2;
+        double collisionX = position.getX() - collisionLength / 2;
+        double collisionY = position.getY() - collisionLength / 2;
 
         collisionBox = new Rectangle2D.Double(collisionX, collisionY, collisionLength, collisionLength);
-        range = new Rectangle.Double(0, 0, 2 * collisionLength, 2 * collisionLength);
-        range.x = position.x - range.width / 2;
-        range.y = position.y - range.height / 2;
+        range = new Rectangle2D.Double(0, 0, 2 * collisionLength, 2 * collisionLength);
+        range.x = position.getX() - range.getWidth() / 2;
+        range.y = position.getY() - range.getHeight() / 2;
     }
 
     public void update() {
-        position.add(speed);
+        x += speedX;
+        y += speedY;
+
         bounce(boundary);
 //        position.wrap(boundary);
-        double collisionX = position.x - collisionLength / 2;
-        double collisionY = position.y - collisionLength / 2;
+
+        double collisionX = x - collisionLength / 2;
+        double collisionY = y - collisionLength / 2;
         collisionBox.x = collisionX;
         collisionBox.y = collisionY;
-        range.x = position.x - range.width / 2;
-        range.y = position.y - range.height / 2;
+
+        range.x = x - range.width / 2;
+        range.y = y - range.height / 2;
     }
 
     public void bounce(double minX, double minY, double maxX, double maxY) {
-        if (position.x <= minX || position.x > maxX) {
-            speed.x = -speed.x; // Reverse horizontal direction
+        if (x <= minX || x > maxX) {
+            speedX = -speedX; // Reverse horizontal direction
         }
-        if (position.y <= minY || position.y > maxY) {
-            speed.y = -speed.y; // Reverse horizontal direction
+        if (y <= minY || y > maxY) {
+            speedY = -speedY; // Reverse horizontal direction
         }
     }
 
-    public void bounce(Rectangle.Double boundary) {
-        if (position.x <= boundary.getMinX() || position.x > boundary.getMaxX()) {
-            speed.x = -speed.x; // Reverse horizontal direction
+    public void bounce(Rectangle2D.Double boundary) {
+        if (x <= boundary.getMinX() || x > boundary.getMaxX()) {
+            speedX = -speedX; // Reverse horizontal direction
         }
-        if (position.y <= boundary.getMinY() || position.y > boundary.getMaxY()) {
-            speed.y = -speed.y; // Reverse horizontal direction
+        if (y <= boundary.getMinY() || y > boundary.getMaxY()) {
+            speedY = -speedY; // Reverse horizontal direction
         }
     }
 

@@ -7,6 +7,8 @@ package com.tmn.quadtree;
 
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,12 +19,13 @@ import java.util.Collection;
  */
 public class QuadTree {
 
-    Rectangle.Double boundary;
-    double midX, midY;
-    double halfWidth, halfHeight;
-    MovingPoint[] points;
-    int pointsIndex, maxCapacity;
-    boolean isDivided;
+    private final Rectangle.Double boundary;
+    private final double midX, midY;
+    private final double halfWidth, halfHeight;
+    private final Point2D[] points;
+    private int pointsIndex;
+    private final int maxCapacity;
+    private boolean divided;
     QuadTree nw;
     QuadTree ne;
     QuadTree se;
@@ -36,40 +39,41 @@ public class QuadTree {
         halfHeight = this.boundary.height / 2;
         this.maxCapacity = maxCapacity;
         pointsIndex = 0;
-        points = new MovingPoint[maxCapacity];
-        isDivided = false;
+        points = new Point2D[maxCapacity];
+        divided = false;
     }
 
-    public boolean insert(MovingPoint movingPoint) {
-        if (!boundary.contains(movingPoint.position)) {
+    public boolean insert(Point2D point) {
+        if (!boundary.contains(point)) {
             return false;
         }
         if (pointsIndex < maxCapacity) {
-            points[pointsIndex] = movingPoint;
+            points[pointsIndex] = point;
             pointsIndex++;
             return true;
         }
-        if (!isDivided) {
+        if (!divided) {
             subDivide();
         }
-        Point.Double p = movingPoint.position;
-        if (p.x > midX && p.y <= midY) {
-            return ne.insert(movingPoint);
+        double x = point.getX();
+        double y = point.getY();
+        if (x > midX && y <= midY) {
+            return ne.insert(point);
         }
-        if (p.x >= midX && p.y > midY) {
-            return se.insert(movingPoint);
+        if (x >= midX && y > midY) {
+            return se.insert(point);
         }
-        if (p.x <= midX && p.y < midY) {
-            return nw.insert(movingPoint);
+        if (x <= midX && y < midY) {
+            return nw.insert(point);
         }
-        if (p.x < midX && p.y >= midY) {
-            return sw.insert(movingPoint);
+        if (x < midX && y >= midY) {
+            return sw.insert(point);
         }
         return false;
     }
 
     private void subDivide() {
-        isDivided = true;
+        divided = true;
         if (ne == null) {
             Rectangle.Double NEboundary = new Rectangle.Double(midX, boundary.y, halfWidth, halfHeight);
             ne = new QuadTree(NEboundary, maxCapacity);
@@ -88,51 +92,53 @@ public class QuadTree {
         }
     }
 
-    public ArrayList<MovingPoint> query(Rectangle.Double range) {
-        return (ArrayList<MovingPoint>) query0(range, new ArrayList<>());
-    }
-
-    public ArrayList<MovingPoint> query(Rectangle.Double range, Collection<MovingPoint> found) {
-        if (found == null) {
-            found = new ArrayList<>(5 * maxCapacity);
-        }
-        return (ArrayList<MovingPoint>) query0(range, found);
-    }
-
-    private Collection<MovingPoint> query0(Rectangle.Double range, Collection<MovingPoint> found) {
+    private <T extends Point2D> Collection<T> query0(Rectangle.Double range, Collection<T> found) {
         if (!boundary.intersects(range)) {
             return found;
         }
         for (int i = 0; i < pointsIndex; i++) {
-            MovingPoint mp = points[i];
-            Point.Double p = mp.position;
-            if (range.contains(p)) {
-                found.add(mp);
+            Point2D mp = points[i];
+            if (range.contains(mp)) {
+                found.add((T) mp);
             }
         }
-        if (isDivided) {
-            ne.query(range, found);
-            nw.query(range, found);
-            se.query(range, found);
-            sw.query(range, found);
+        if (divided) {
+            ne.query0(range, found);
+            nw.query0(range, found);
+            se.query0(range, found);
+            sw.query0(range, found);
         }
 
         return found;
     }
 
+    public ArrayList<Point2D> query(Rectangle.Double range) {
+        return query(range, null);
+    }
+
+    public <T extends Point2D> ArrayList<T> query(Rectangle.Double range, Collection<T> found) {
+        if (found == null) {
+            found = new ArrayList<>(4 * maxCapacity);
+        }
+        return (ArrayList<T>) query0(range, found);
+    }
+
     private void draw0(Graphics2D g2d) {
-//        g2d.draw(boundary);
+        g2d.draw(boundary);
+        Line2D line = new Line2D.Double();
         for (int i = 0; i < pointsIndex; i++) {
-            MovingPoint mp = points[i];
-            Point.Double p = mp.position;
-            g2d.drawLine((int) p.x, (int) p.y, (int) p.x, (int) p.y);
-            g2d.draw(mp.collisionBox);
+            Point2D p = points[i];
+            line.setLine(p, p);
+            g2d.draw(line);
+            if (p instanceof MovingPoint mp) {
+                g2d.draw(mp.collisionBox);
+            }
         }
     }
 
     public void draw(Graphics2D g2d) {
         draw0(g2d);
-        if (isDivided) {
+        if (divided) {
             ne.draw(g2d);
             nw.draw(g2d);
             se.draw(g2d);
@@ -145,7 +151,7 @@ public class QuadTree {
             return;
         }
         draw0(g2d);
-        if (isDivided) {
+        if (divided) {
             ne.draw(g2d, viewPort);
             nw.draw(g2d, viewPort);
             se.draw(g2d, viewPort);
@@ -158,7 +164,7 @@ public class QuadTree {
             return;
         }
         g2d.draw(boundary);
-        if (isDivided) {
+        if (divided) {
             ne.drawBoundary(g2d, viewPort);
             nw.drawBoundary(g2d, viewPort);
             se.drawBoundary(g2d, viewPort);
@@ -167,14 +173,34 @@ public class QuadTree {
     }
 
     public void clearTree() {
-        if (isDivided) {
+        if (divided) {
             ne.clearTree();
             nw.clearTree();
             se.clearTree();
             sw.clearTree();
         }
         pointsIndex = 0; // soft reset
-        isDivided = false;
+        divided = false;
+    }
+
+    public Rectangle2D.Double getBoundary() {
+        return boundary;
+    }
+
+    public int getMaxCapacity() {
+        return maxCapacity;
+    }
+
+    public boolean isDivided() {
+        return divided;
+    }
+
+    public int getPointsIndex() {
+        return pointsIndex;
+    }
+
+    public Point2D get(int index) {
+        return points[index];
     }
 
 }
