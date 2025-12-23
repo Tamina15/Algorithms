@@ -34,3 +34,5 @@ nb-configuration.xml
 /CellularAutomata/target/
 /QuadTree/target/
 /EdgeDetection/target/
+/BezierCurve/target/
+/PolygonTriangulation/target/
