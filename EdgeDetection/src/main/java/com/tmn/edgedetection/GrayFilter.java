@@ -12,7 +12,7 @@ public class GrayFilter extends RGBImageFilter {
         int gray = r;
         if (g > gray) {
             gray = g;
-        }
+}
         if (b > gray) {
             gray = b;
         }
