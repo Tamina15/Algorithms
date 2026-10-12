@@ -188,7 +188,7 @@ public class CellularAutomata {
 
         g2d.translate(offsetX, offsetY);
         g2d.drawImage(image, 0, 0, width, height, null);
-        g2d.drawString(Arrays.toString(ruleArray), 0, -10);
+//        g2d.drawString(Arrays.toString(ruleArray), 0, -10);
 
         g2d.setTransform(at);
     }
@@ -418,4 +418,8 @@ public class CellularAutomata {
         return height;
     }
 
+    public int[] getRuleArray() {
+        return ruleArray;
+    }
+    
 }

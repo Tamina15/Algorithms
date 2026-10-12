@@ -93,15 +93,21 @@ public class CARandom2 extends Random {
      * @see #newReversedArray(int[] array)
      * @see #randomPadding
      */
+//    private void init() {
+//        int[] seeds = toBinaryArray(seed);
+//        int[] reversedSeeds = newReversedArray(seeds);
+//        int[] cells = interleave(length, seeds, randomPadding, reversedSeeds);
+//        for (int i = 0; i < Long.SIZE; i++) {
+//            left = (left << 1) + cells[i];
+//            mid = (mid << 1) + cells[i + Long.SIZE];
+//            right = (right << 1) + cells[i + (Long.SIZE * 2)];
+//        }
+//    }
     private void init() {
-        int[] seeds = toBinaryArray(seed);
-        int[] reversedSeeds = newReversedArray(seeds);
-        int[] cells = interleave(length, seeds, randomPadding, reversedSeeds);
-        for (int i = 0; i < Long.SIZE; i++) {
-            left = (left << 1) + cells[i];
-            mid = (mid << 1) + cells[i + Long.SIZE];
-            right = (right << 1) + cells[i + (Long.SIZE * 2)];
-        }
+        long mask = 1515151515151515151L;
+        left = mask;
+        mid = seed ^ mask;
+        right = ~mask;
     }
 
     /**

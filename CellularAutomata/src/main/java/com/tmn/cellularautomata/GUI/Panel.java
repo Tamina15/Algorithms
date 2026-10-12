@@ -15,6 +15,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
+import java.util.Arrays;
 import java.util.Random;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -148,6 +149,8 @@ public class Panel extends JPanel {
         rca.draw(g2d, 0, ca.getHeight() + 15);
         rwca.draw(g2d, ca.getWidth() + 15, ca.getHeight() + 15);
         ///////////////
+        g2d.setColor(Color.white);
+        g2d.drawString(Arrays.toString(ca.getRuleArray()), 0, -10);
 
         g2d.setColor(Color.red);
         g2d.setTransform(at);
