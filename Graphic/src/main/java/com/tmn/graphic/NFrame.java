@@ -2,14 +2,15 @@ package com.tmn.graphic;
 
 import java.awt.Component;
 import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JFrame;
 
 public class NFrame extends JFrame implements NUpdatable {
 
-    ArrayList<NUpdatable> updatables;
+    private final List<NUpdatable> updatables = new ArrayList<>();
 
     public NFrame() {
-        updatables = new ArrayList<>();
+        super();
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.setVisible(true);
         this.setEnabled(true);
@@ -18,8 +19,8 @@ public class NFrame extends JFrame implements NUpdatable {
     @Override
     public Component add(Component comp) {
         Component c = super.add(comp);
-        if (NUpdatable.class.isAssignableFrom(c.getClass())) {
-            updatables.add((NUpdatable) comp);
+        if (c instanceof NUpdatable u) {
+            updatables.add(u);
         }
         return c;
     }

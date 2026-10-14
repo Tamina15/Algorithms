@@ -1,60 +1,28 @@
 package com.tmn.graphic;
 
-import com.tmn.graphic.NUpdatable;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 public class NPanel extends JPanel implements NUpdatable {
 
-    private final int width, height;
-    private final Point origin = new Point(0, 0);
-    private final Point oldOrigin = new Point(0, 0);
-    private final Point mousePt = new Point(0, 0);
-    private double zoomFactor = 1, zoomMutiplier = 0.05;
-    private int scale = 1;
-
-    public NPanel(int width, int height) {
-        this.width = width;
-        this.height = height;
-        this.setPreferredSize(new Dimension(width, height));
-        this.setDoubleBuffered(true);
-        this.setBackground(Color.BLACK);
-        this.setFocusable(true);
-        this.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                if (SwingUtilities.isLeftMouseButton(e)) {
-                    setAnchorPoint(e);
-                }
-            }
-        });
-
-        this.addMouseMotionListener(new MouseMotionAdapter() {
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                move(e);
-            }
-        });
-
-        this.addMouseWheelListener((MouseWheelEvent e) -> {
-            zoom(e);
-        });
-
-        init();
-    }
+    public int width, height;
+    private final Point2D origin = new Point.Double();
+    private final Point2D oldOrigin = new Point.Double();
+    private final Point2D mousePanel = new Point.Double(), mouseWorld = new Point.Double();
+    private double scale = 1;
+    private final double zoomFactor = 1.05, inversedZoomFactor = 1 / zoomFactor, minScale = 0.15, maxScale = 15.3674;
 
     public NPanel(Dimension d) {
         this(d.width, d.height);
@@ -64,41 +32,107 @@ public class NPanel extends JPanel implements NUpdatable {
         this(Toolkit.getDefaultToolkit().getScreenSize());
     }
 
+    public NPanel(int width, int height) {
+        super();
+        this.width = width;
+        this.height = height;
+        setPreferredSize(new Dimension(width, height));
+        setBackground(Color.BLACK);
+        setFocusable(true);
+        addMouseListeners();
+    }
+
+    private void addMouseListeners() {
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e)) {
+                    setAnchorPoint(e);
+                }
+            }
+        });
+
+        addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e)) {
+                    drag(e);
+                }
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                move(e);
+            }
+        });
+
+        addMouseWheelListener((MouseWheelEvent e) -> zoom(e));
+    }
+
+    public void resetTransform() {
+        resetScale();
+        resetTranslate();
+    }
+
+    public void resetScale() {
+        scale = 1;
+    }
+
+    public void resetTranslate() {
+        oldOrigin.setLocation(0, 0);
+        origin.setLocation(0, 0);
+        mousePanel.setLocation(0, 0);
+    }
+
     private void setAnchorPoint(MouseEvent e) {
         oldOrigin.setLocation(origin);
-        mousePt.setLocation(e.getPoint());
+        mousePanel.setLocation(e.getPoint());
     }
 
     private void move(MouseEvent e) {
-        double dx = ((e.getX() - mousePt.x) / zoomFactor);
-        double dy = ((e.getY() - mousePt.y) / zoomFactor);
+        mousePanel.setLocation(e.getPoint());
+        mouseWorld.setLocation((mousePanel.getX() - origin.getX()) / scale,
+                (mousePanel.getY() - origin.getY()) / scale);
+    }
+
+    private void drag(MouseEvent e) {
+        double dx = ((e.getX() - mousePanel.getX()));
+        double dy = ((e.getY() - mousePanel.getY()));
         origin.setLocation(oldOrigin.getX() + dx, oldOrigin.getY() + dy);
     }
 
     private void zoom(MouseWheelEvent e) {
+        double z = 1, c = scale;
+
         // Zoom in
-        boolean isZoomIn = true;
         if (e.getWheelRotation() < 0) {
-            zoomFactor += zoomMutiplier;
+            z = zoomFactor;
         }
+
         // Zoom out
         if (e.getWheelRotation() > 0) {
-            isZoomIn = false;
-            zoomFactor -= zoomMutiplier;
+            z = inversedZoomFactor;
         }
-    }
+        scale = scale * z;
 
-    private void init() {
+        if (Math.abs(scale - 1) < 0.04) {
+            scale = 1;
+        } else {
+            scale = Math.clamp(scale, minScale, maxScale);
+        }
+
+        if (scale == c) {
+            return;
+        }
+
+        Point a = e.getPoint();
+        double x = a.x - (a.x - origin.getX()) * z;
+        double y = a.y - (a.y - origin.getY()) * z;
+        origin.setLocation(x, y);
     }
 
     @Override
     public void paintComponent(Graphics g) {
-//        super.paintComponent(g);
-//        Graphics2D g2d = (Graphics2D) g;
-//        AffineTransform at = g2d.getTransform();
-//        g2d.translate(origin.x, origin.y);
-//        g2d.scale(zoomFactor, zoomFactor);
-//        draw(g2d, at);
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
         // Original rectangle position and size
@@ -108,27 +142,24 @@ public class NPanel extends JPanel implements NUpdatable {
         AffineTransform originalTransform = g2d.getTransform();
 
         g2d.drawRect(rectX, rectY, rectWidth, rectHeight);
-        // Apply scaling
-                g2d.translate(origin.x, origin.y);
-        g2d.scale(zoomFactor, zoomFactor);
+        g2d.setColor(Color.white);
 
-        // Adjust rectangle position to keep it relative after scaling
-        int adjustedX = (int) (rectX / zoomFactor);
-        int adjustedY = (int) (rectY / zoomFactor);
+        // Apply scaling
+        g2d.translate(origin.getX(), origin.getY());
+        g2d.scale(scale, scale);
 
         // Draw the rectangle
-        g2d.drawRect(adjustedX, adjustedY, rectWidth, rectHeight);
-
+        g2d.fillRect(rectX, rectY, rectWidth, rectHeight);
+        draw(g2d);
         // Restore the original transform
         g2d.setTransform(originalTransform);
     }
 
-    public void draw(Graphics2D g2d, AffineTransform at) {
+    public void draw(Graphics2D g2d) {
 
     }
 
     @Override
     public void update() {
     }
-
 }
