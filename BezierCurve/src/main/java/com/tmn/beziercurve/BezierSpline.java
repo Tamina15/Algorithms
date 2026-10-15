@@ -10,63 +10,77 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.QuadCurve2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Objects;
 
 public class BezierSpline implements Shape {
 
-    private Path2D path = new Path2D.Double();
-    private Point2D[] points;
     private static final int CLOSED_LOOP = 1, OPEN_LOOP = 2; // Do not change this, it's used in calculation
-    private int looped = OPEN_LOOP;
+    private Path2D path;
+    private Point2D[] points;
+    private int looped;
 
     public BezierSpline(Point2D[] points) {
+        this(points, OPEN_LOOP);
+    }
+
+    public BezierSpline(Point2D[] points, int looped) {
+        check(points);
         this.points = points;
+        this.looped = looped;
         initPath();
+    }
+
+    private void check(Point2D[] points) {
+        Objects.requireNonNull(points, "Points can not be null");
+
+        if (points.length == 0) {
+            throw new IllegalArgumentException("Points length can not be 0");
+        }
+
+        for (int i = 0; i < points.length; i++) {
+            Objects.requireNonNull(points[i], "Point at index " + i + " is null");
+        }
     }
 
     private void initPath() {
         Shape s;
         switch (points.length) {
             case 0 -> {
-                return;
+                throw new IllegalArgumentException("Points length can not be 0");
             }
             case 1 -> {
                 s = new Line2D.Double(points[0], points[0]);
-                break;
             }
             case 2 -> {
                 s = new Line2D.Double(points[0], points[1]);
-                break;
             }
             case 3 -> {
                 QuadCurve2D curve = new QuadCurve2D.Double();
                 curve.setCurve(points, 0);
                 s = curve;
-                break;
             }
             case 4 -> {
                 CubicCurve2D curve = new CubicCurve2D.Double();
                 curve.setCurve(points, 0);
                 s = curve;
-                break;
             }
             default -> {
                 s = PiecewiseQuadraticBezierCurves();
-                break;
             }
         }
-        int windingRule = path.getWindingRule();
+        int windingRule = path != null ? path.getWindingRule() : Path2D.WIND_NON_ZERO;
         path = new Path2D.Double(s);
         path.setWindingRule(windingRule);
     }
 
     private Path2D PiecewiseQuadraticBezierCurves() {
-        Path2D path = new Path2D.Double();
+        Path2D curve = new Path2D.Double();
         Point2D p0 = points[0];
         Point2D p1 = points[looped % 2];
         double xA = p0.getX() + (p1.getX() - p0.getX()) / 2;
         double yA = p0.getY() + (p1.getY() - p0.getY()) / 2;
         double xB, yB;
-        path.moveTo(xA, yA);
+        curve.moveTo(xA, yA);
         int l = points.length - looped;
         int i = 1;
         for (; i < l; i++) {
@@ -74,22 +88,22 @@ public class BezierSpline implements Shape {
             Point2D pS = points[i + 1];
             xB = pF.getX() + (pS.getX() - pF.getX()) / 2;
             yB = pF.getY() + (pS.getY() - pF.getY()) / 2;
-            path.quadTo(pF.getX(), pF.getY(), xB, yB);
+            curve.quadTo(pF.getX(), pF.getY(), xB, yB);
         }
         if (isOpenLoop()) {
             Point2D secondLast = points[i++];
             Point2D last = points[i];
-            path.quadTo(secondLast.getX(), secondLast.getY(), last.getX(), last.getY());
+            curve.quadTo(secondLast.getX(), secondLast.getY(), last.getX(), last.getY());
         } else {
             Point2D pF = points[i];
             Point2D pS = points[0];
             xB = pF.getX() + (pS.getX() - pF.getX()) / 2;
             yB = pF.getY() + (pS.getY() - pF.getY()) / 2;
-            path.quadTo(pF.getX(), pF.getY(), xB, yB);
+            curve.quadTo(pF.getX(), pF.getY(), xB, yB);
 
-            path.quadTo(p0.getX(), p0.getY(), xA, yA);
+            curve.quadTo(p0.getX(), p0.getY(), xA, yA);
         }
-        return path;
+        return curve;
     }
 
     public void newPath() {
@@ -101,6 +115,7 @@ public class BezierSpline implements Shape {
     }
 
     public void setPoints(Point2D[] points) {
+        check(points);
         this.points = points;
         initPath();
     }
