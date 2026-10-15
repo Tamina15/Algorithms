@@ -16,9 +16,13 @@ import javax.swing.SwingUtilities;
 public class NPanel extends JPanel implements NUpdatable {
 
     public int width, height;
-    private double originX, originY, oldOriginX, oldOriginY, mousePanelX, mousePanelY, mouseWorldX, mouseWorldY;
+    protected double originX, originY;
+    protected double oldOriginX, oldOriginY;
+    protected double anchorX, anchorY;
+    protected double mouseWorldX, mouseWorldY;
+    protected double currentMouseX, currentMouseY;
     private double scale = 1;
-    private final double zoomFactor = 1.05, inversedZoomFactor = 1 / zoomFactor, minScale = 0.15, maxScale = 15.3674;
+    protected double zoomFactor = 1.05, inversedZoomFactor = 1 / zoomFactor, minScale = 0.15, maxScale = 15.3674;
 
     public NPanel(Dimension d) {
         this(d.width, d.height);
@@ -51,6 +55,7 @@ public class NPanel extends JPanel implements NUpdatable {
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
+                currentMouse(e);
                 if (SwingUtilities.isLeftMouseButton(e)) {
                     drag(e);
                 }
@@ -58,6 +63,7 @@ public class NPanel extends JPanel implements NUpdatable {
 
             @Override
             public void mouseMoved(MouseEvent e) {
+                currentMouse(e);
                 move(e);
             }
         });
@@ -81,47 +87,44 @@ public class NPanel extends JPanel implements NUpdatable {
         originX = 0;
         originY = 0;
 
-        mousePanelX = 0;
-        mousePanelY = 0;
+        anchorX = 0;
+        anchorY = 0;
     }
 
-    private void setAnchorPoint(MouseEvent e) {
+    private void currentMouse(MouseEvent e) {
+        currentMouseX = e.getX();
+        currentMouseY = e.getY();
+    }
+
+    protected void setAnchorPoint(MouseEvent e) {
         oldOriginX = originX;
         oldOriginY = originY;
 
-        mousePanelX = e.getX();
-        mousePanelY = e.getY();
+        anchorX = e.getX();
+        anchorY = e.getY();
     }
 
-    private void move(MouseEvent e) {
-        mousePanelX = e.getX();
-        mousePanelY = e.getY();
-
-        mouseWorldX = (mousePanelX - originX) / scale;
-        mouseWorldY = (mousePanelY - originY) / scale;
+    protected void move(MouseEvent e) {
+        mouseWorldX = (currentMouseX - originX) / scale;
+        mouseWorldY = (currentMouseY - originY) / scale;
     }
 
-    private void drag(MouseEvent e) {
-        double dx = ((e.getX() - mousePanelX));
-        double dy = ((e.getY() - mousePanelY));
+    protected void drag(MouseEvent e) {
+        double dx = ((e.getX() - anchorX));
+        double dy = ((e.getY() - anchorY));
 
         originX = oldOriginX + dx;
         originY = oldOriginY + dy;
     }
 
-    private void zoom(MouseWheelEvent e) {
-        double z = 1, c = scale;
+    protected void zoom(MouseWheelEvent e) {
+        double oldScale = scale;
 
-        // Zoom in
         if (e.getWheelRotation() < 0) {
-            z = zoomFactor;
+            scale *= zoomFactor;
+        } else if (e.getWheelRotation() > 0) {
+            scale *= inversedZoomFactor;
         }
-
-        // Zoom out
-        if (e.getWheelRotation() > 0) {
-            z = inversedZoomFactor;
-        }
-        scale = scale * z;
 
         if (Math.abs(scale - 1) < 0.04) {
             scale = 1;
@@ -129,45 +132,61 @@ public class NPanel extends JPanel implements NUpdatable {
             scale = Math.clamp(scale, minScale, maxScale);
         }
 
-        if (scale == c) {
+        if (scale == oldScale) {
             return;
         }
 
         double x = e.getX();
         double y = e.getY();
-        originX = x - (x - originX) * z;
-        originY = y - (y - originY) * z;
+
+        // World position currently under the mouse
+        double worldX = (x - originX) / oldScale;
+        double worldY = (y - originY) / oldScale;
+
+        // Move origin so the same world point stays under the mouse
+        originX = x - worldX * scale;
+        originY = y - worldY * scale;
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-        // Original rectangle position and size
-        int rectX = 50, rectY = 50, rectWidth = 100, rectHeight = 50;
 
-        // Save the original transform
-        AffineTransform originalTransform = g2d.getTransform();
-
-        g2d.drawRect(rectX, rectY, rectWidth, rectHeight);
-        g2d.setColor(Color.white);
+        // Save the original AffineTransform
+        AffineTransform at = g2d.getTransform();
 
         // Apply scaling
         g2d.translate(originX, originY);
         g2d.scale(scale, scale);
 
-        // Draw the rectangle
-        g2d.fillRect(rectX, rectY, rectWidth, rectHeight);
         draw(g2d);
-        // Restore the original transform
-        g2d.setTransform(originalTransform);
+
+        // Restore the original AffineTransform
+        g2d.setTransform(at);
+
+        drawOriginal(g2d);
+
+        // Restore the original AffineTransform
+        g2d.setTransform(at);
     }
 
     public void draw(Graphics2D g2d) {
+    }
 
+    public void drawOriginal(Graphics2D g2d) {
     }
 
     @Override
     public void update() {
+    }
+
+    public double getScale() {
+        return scale;
+    }
+
+    public void setZoomFactor(double zoomFactor) {
+        this.zoomFactor = zoomFactor;
+        inversedZoomFactor = 1 / this.zoomFactor;
     }
 }
