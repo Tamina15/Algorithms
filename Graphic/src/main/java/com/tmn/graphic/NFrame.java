@@ -7,6 +7,7 @@ import javax.swing.JFrame;
 
 public class NFrame extends JFrame implements NUpdatable {
 
+    public double fps, ups;
     private final List<NUpdatable> updatables = new ArrayList<>();
 
     public NFrame() {
@@ -17,17 +18,16 @@ public class NFrame extends JFrame implements NUpdatable {
     }
 
     @Override
-    public Component add(Component comp) {
-        Component c = super.add(comp);
-        if (c instanceof NUpdatable u) {
+    protected void addImpl(Component comp, Object constraints, int index) {
+        super.addImpl(comp, constraints, index);
+        if (comp instanceof NUpdatable u) {
             updatables.add(u);
         }
-        return c;
     }
 
     public void update() {
         updatables.forEach((t) -> {
-            t.update();
+            t.update(fps, ups);
         });
     }
 
