@@ -39,7 +39,6 @@ public class MovingPoint extends Point2D.Double {
         y += speedY;
 
         bounce(boundary);
-//        position.wrap(boundary);
 
         double collisionX = x - collisionLength / 2;
         double collisionY = y - collisionLength / 2;

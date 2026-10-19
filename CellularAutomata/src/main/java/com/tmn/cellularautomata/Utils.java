@@ -78,15 +78,12 @@ public class Utils {
     }
 
     /**
-     * Reverse the array elements in-place.
-     *
-     * @apiNote
-     * This method change the input array element positions.
+     * Reverse the input array elements.
      *
      * @param array the array to be reversed
-     *
+     * @return the input array, reversed
      */
-    public static void reverseArray(int[] array) {
+    public static int[] reverseArray(int[] array) {
         int length = array.length;
         int half = length / 2;
         for (int i = 0; i < half; i++) {
@@ -94,6 +91,7 @@ public class Utils {
             array[i] = array[length - i - 1];
             array[length - i - 1] = temp;
         }
+        return array;
     }
 
     /**

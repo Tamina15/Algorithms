@@ -1,44 +1,28 @@
 package com.tmn.quadtree;
 
+import com.tmn.graphic.NPanel;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.Toolkit;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseWheelEvent;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Random;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
-public class Panel extends JPanel {
-
-    int width;
-    int height;
+public class Panel extends NPanel {
 
     private final int viewPortBuffer = 150;
     private Rectangle.Double originalViewPort, viewPort;
 
-    private final Point.Double origin = new Point.Double();
-    private final Point.Double oldOrigin = new Point.Double();
-    private final Point.Double mousePt = new Point.Double(), mouseWorld = new Point.Double();
-    private double scale = 1, zoomFactor = 1.05, inversedZoomFactor = 1 / zoomFactor, minScale = 0.15, maxScale = 15.3674;
-
     Random random = new Random();
-    int n = 15000;
+    int n = 150000;
     Rectangle.Double boundary;
     QuadTree qtree;
 
@@ -47,56 +31,14 @@ public class Panel extends JPanel {
     double collisionLength;
     double updateTime;
 
-    public Panel(Dimension d) {
-        this(d.width, d.height);
-    }
-
-    public Panel() {
-        this(Toolkit.getDefaultToolkit().getScreenSize());
-    }
-
     public Panel(int width, int height) {
-        this.width = width;
-        this.height = height;
-
-        this.setPreferredSize(new Dimension(width, height));
-        this.setDoubleBuffered(true);
-        this.setBackground(Color.black);
-        this.setFocusable(true);
-
-        this.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                if (SwingUtilities.isLeftMouseButton(e)) {
-                    setAnchorPoint(e);
-                }
-            }
-        });
-        this.addMouseMotionListener(new MouseMotionAdapter() {
-            @Override
-            public void mouseMoved(MouseEvent e) {
-                move(e);
-            }
-
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                if (SwingUtilities.isLeftMouseButton(e)) {
-                    drag(e);
-                }
-            }
-
-        });
-        this.addMouseWheelListener((MouseWheelEvent e) -> {
-            zoom(e);
-        });
-
+        super(width, height);
         this.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 int c = e.getKeyCode();
                 if (c == KeyEvent.VK_CONTROL) {
-                    zoomFactor = 1.15;
-                    inversedZoomFactor = 1 / 1.15;
+                    setZoomFactor(1.15);
                 }
             }
 
@@ -104,8 +46,7 @@ public class Panel extends JPanel {
             public void keyReleased(KeyEvent e) {
                 int c = e.getKeyCode();
                 if (c == KeyEvent.VK_CONTROL) {
-                    zoomFactor = 1.05;
-                    inversedZoomFactor = 1 / 1.05;
+                    setZoomFactor(1.05);
                 }
             }
         });
@@ -127,8 +68,8 @@ public class Panel extends JPanel {
                     originalViewPort.width += dx;
                     originalViewPort.height += dy;
 
-                    origin.x += half_dx;
-                    origin.y += half_dy;
+                    originX += half_dx;
+                    originY += half_dy;
 
                     centerViewPort();
                 }
@@ -137,7 +78,7 @@ public class Panel extends JPanel {
 
         newViewPort();
 
-        boundary = new Rectangle.Double(0, 0, 20 * width, 15 * height);
+        boundary = new Rectangle.Double(0, 0, width * 30, height * 30);
         qtree = new QuadTree(boundary, 10);
         points = new ArrayList<>(n);
         collisionLength = 50;
@@ -164,71 +105,32 @@ public class Panel extends JPanel {
     }
 
     private void centerViewPort() {
+        double scale = getScale();
         viewPort.width = originalViewPort.width / scale;
         viewPort.height = originalViewPort.height / scale;
-        viewPort.x = (originalViewPort.x - origin.x) / scale;
-        viewPort.y = (originalViewPort.y - origin.y) / scale;
-    }
-
-    private void setAnchorPoint(MouseEvent e) {
-        oldOrigin.setLocation(origin);
-        mousePt.setLocation(e.getPoint());
-    }
-
-    private void move(MouseEvent e) {
-        mousePt.setLocation(e.getPoint());
-        mouseWorld.setLocation((mousePt.x - origin.x) / scale, (mousePt.y - origin.y) / scale);
-    }
-
-    private void drag(MouseEvent e) {
-        double dx = ((e.getX() - mousePt.x));
-        double dy = ((e.getY() - mousePt.y));
-        origin.setLocation(oldOrigin.x + dx, oldOrigin.y + dy);
-        viewPort.x = (originalViewPort.x - origin.x) / scale;
-        viewPort.y = (originalViewPort.y - origin.y) / scale;
-    }
-
-    private void zoom(MouseWheelEvent e) {
-        double z = 1, c = scale;
-
-        // Zoom in
-        if (e.getWheelRotation() < 0) {
-            z = zoomFactor;
-        }
-
-        // Zoom out
-        if (e.getWheelRotation() > 0) {
-            z = inversedZoomFactor;
-        }
-        scale = scale * z;
-
-        if (Math.abs(scale - 1) < 0.04) {
-            scale = 1;
-        } else {
-            scale = Math.clamp(scale, minScale, maxScale);
-        }
-
-        if (scale == c) {
-            return;
-        }
-
-        Point a = e.getPoint();
-        origin.x = a.x - (a.x - origin.x) * z;
-        origin.y = a.y - (a.y - origin.y) * z;
-
-        centerViewPort();
+        viewPort.x = (originalViewPort.x - originX) / scale;
+        viewPort.y = (originalViewPort.y - originY) / scale;
     }
 
     @Override
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
-        AffineTransform at = g2d.getTransform();
+    protected void drag(MouseEvent e) {
+        super.drag(e);
+        double scale = getScale();
+        viewPort.x = (originalViewPort.x - originX) / scale;
+        viewPort.y = (originalViewPort.y - originY) / scale;
+    }
 
-        g2d.translate(origin.x, origin.y);
-        g2d.scale(scale, scale);
+    @Override
+    protected void zoom(MouseWheelEvent e) {
+        super.zoom(e);
+        centerViewPort();
+    }
 
-        long s = System.nanoTime();
+    private long s, e;
+
+    @Override
+    public void draw(Graphics2D g2d) {
+        s = System.nanoTime();
 
         g2d.setColor(Color.white);
         qtree.draw(g2d, viewPort);
@@ -236,23 +138,30 @@ public class Panel extends JPanel {
         g2d.setColor(Color.green);
         g2d.draw(viewPort);
 
-        long e = System.nanoTime();
+        e = System.nanoTime();
 
-        g2d.setTransform(at);
-
-        g2d.setColor(Color.white);
-        g2d.drawString("draw time: " + (e - s) * 1.0 / 1_000_000 + "ms", 0, 30);
-        g2d.drawString("update time: " + updateTime + "ms", 0, 60);
-        g2d.drawString("zoom: " + scale, 0, 90);
-        g2d.dispose();
     }
 
-    public void update() {
+    @Override
+    public void drawOriginal(Graphics2D g2d) {
+        g2d.setColor(Color.white);
+        double drawTime = (e - s) * 1.0 / 1_000_000;
+        g2d.drawString("draw time: " + drawTime + "ms", 0, 30);
+        g2d.drawString("update time: " + updateTime + "ms", 0, 60);
+        g2d.drawString("zoom: " + getScale(), 0, 90);
+        g2d.drawString("FPS: " + 1000.0 / drawTime, 0, 120);
+        g2d.drawString("UPS: " + ups, 0, 150);
+        g2d.dispose();
+    }
+    double ups;
+
+    public void update(double fps, double ups) {
+        this.ups = ups;
         long start = System.nanoTime();
 
         updatePosition();
         updateTree();
-//        collideDectection();
+        collideDectection();
 
         long end = System.nanoTime();
         updateTime = (end - start) * 1.0 / 1_000_000;
@@ -277,15 +186,15 @@ public class Panel extends JPanel {
     private void collideDectection() {
         ArrayList<MovingPoint> newCollideds = new ArrayList<>(n / 2);
         for (MovingPoint p : points) {
-            if (viewPort.contains(p)) {
-                ArrayList<MovingPoint> founds = new ArrayList<>();
-                qtree.query(p.range, founds);
-                for (int i = 0; i < founds.size(); i++) {
-                    MovingPoint f = founds.get(i);
-                    if (p != f && p.collide(f)) {
-                        newCollideds.add(f);
-                    }
+//            if (viewPort.contains(p)) {
+            ArrayList<MovingPoint> founds = new ArrayList<>();
+            qtree.query(p.range, founds);
+            for (int i = 0; i < founds.size(); i++) {
+                MovingPoint f = founds.get(i);
+                if (p != f && p.collide(f)) {
+                    newCollideds.add(f);
                 }
+//                }
             }
         }
         collideds = newCollideds;

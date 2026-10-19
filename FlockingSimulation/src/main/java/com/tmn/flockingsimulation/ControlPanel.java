@@ -12,12 +12,7 @@ import javax.swing.event.ChangeEvent;
 
 public class ControlPanel extends JPanel {
 
-    private final int width, height;
-
     public ControlPanel(int width, int height) {
-        this.width = width;
-        this.height = height;
-        System.out.println(width);
         this.setPreferredSize(new Dimension(width, height));
         this.setDoubleBuffered(true);
         this.setBackground(new Color(212, 212, 212));

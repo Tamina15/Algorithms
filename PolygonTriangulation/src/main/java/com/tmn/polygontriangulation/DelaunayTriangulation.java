@@ -11,6 +11,7 @@ public interface DelaunayTriangulation {
     public List<Triangle> triangulate(Point2D[] points);
 
     record Pair<U, V>(U first, V second) {
+
     }
 
     record Triplet<T, U, V>(T first, U second, V third) {
@@ -59,7 +60,11 @@ public interface DelaunayTriangulation {
         }
 
         public boolean contains(Point2D p) {
-            return PolygonUtils.isPointInTriangle(p, a, b, c);
+            return contains(p.getX(), p.getY());
+        }
+
+        public boolean contains(double x, double y) {
+            return PolygonUtils.isPointInTriangle(x, y, a.getX(), a.getY(), b.getX(), b.getY(), c.getX(), c.getY());
         }
 
         public boolean ccw() {

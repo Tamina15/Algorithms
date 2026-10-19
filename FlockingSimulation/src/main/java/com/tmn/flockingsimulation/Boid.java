@@ -112,8 +112,7 @@ public class Boid {
             }
         }
         if (neighborsCount > 0) {
-            centerPoint.div(neighborsCount);
-            velocity.add(Point.mul(Point.sub(centerPoint, position), alignFactor));
+            velocity.add(centerPoint.div(neighborsCount).sub(position).mul(alignFactor));
         }
     }
 
@@ -122,12 +121,12 @@ public class Boid {
         Point move = new Point(0, 0);
         for (Boid b : flock) {
             if (!this.equals(b)) {
-                if (this.position.distanceSq(b.position) < Option.avoidPerceptionSq) {
+                if (position.distanceSq(b.position) < Option.avoidPerceptionSq) {
                     move.add(Point.sub(position, b.position));
                 }
             }
         }
-        this.velocity.add(Point.mul(move, avoidFactor));
+        this.velocity.add(move.mul(avoidFactor));
     }
 
     public void matchVelocity(Boid[] flock) {
@@ -141,8 +140,7 @@ public class Boid {
             }
         }
         if (neightborCount > 0) {
-            avg.div(neightborCount);
-            velocity.add(Point.mul(Point.sub(avg, velocity), matchingFactor));
+            velocity.add(avg.div(neightborCount).sub(velocity).mul(matchingFactor));
         }
     }
 

@@ -1,6 +1,5 @@
 package com.tmn.beziercurve;
 
-import com.tmn.graphic.NFrame;
 import com.tmn.graphic.NMain;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -9,8 +8,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.geom.CubicCurve2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
@@ -75,6 +72,9 @@ public class BezierCurve {
                         case KeyEvent.VK_SHIFT -> {
                             path.toggleWindingRule();
                         }
+                        case KeyEvent.VK_Z -> {
+                            fill = !fill;
+                        }
                     }
                 }
 
@@ -106,19 +106,23 @@ public class BezierCurve {
 
         private void init() {
             ps = new Point2D[10];
-            Random r = new Random();
             for (int i = 0; i < ps.length; i++) {
                 ps[i] = new Point2D.Double(r.nextInt(width), r.nextInt(height));
             }
             cubic.setCurve(ps, 0);
-            path.setPoints(ps);
-            path.closeLoop();
+            path = new BezierSpline(ps);
+            angle = new double[ps.length];
+            turn = new double[ps.length];
         }
 
         @Override
         public void draw(Graphics2D g2d) {
             g2d.setColor(Color.white);
-            g2d.draw(path);
+            if (fill) {
+                g2d.fill(path);
+            } else {
+                g2d.draw(path);
+            }
             g2d.setColor(Color.red);
             for (int i = 0; i < ps.length; i++) {
                 drawPoint(g2d, ps[i]);
@@ -145,38 +149,42 @@ public class BezierCurve {
 
         Point2D p, cp = new Point2D.Double();
         int curveIndex = -1;
-        Point2D[] ps = new Point2D[]{
-            new Point2D.Double(100, 50),
-            new Point2D.Double(150, 200),
-            new Point2D.Double(390, 150),
-            new Point2D.Double(300, 450),
-            new Point2D.Double(410, 450),
-            new Point2D.Double(500, 150),
-            new Point2D.Double(600, 100)
-        };
+        Point2D[] ps;
+//        = new Point2D[]{
+//            new Point2D.Double(100, 50),
+//            new Point2D.Double(150, 200),
+//            new Point2D.Double(390, 150),
+//            new Point2D.Double(300, 450),
+//            new Point2D.Double(410, 450),
+//            new Point2D.Double(500, 150),
+//            new Point2D.Double(600, 100)
+//        };
 
-        BezierSpline path = new BezierSpline(ps);
+        BezierSpline path;
         CubicCurve2D cubic = new CubicCurve2D.Double();
         double flatten = 0.015;
+        Random r = new Random();
+        double dt = 0.016;
+        double[] angle, turn;
+        boolean fill;
+
+        @Override
+        public void update() {
+            for (int i = 0; i < ps.length; i++) {
+                turn[i] += (Math.random() - 0.5) * 0.01;
+                turn[i] = Math.clamp(turn[i], -0.05, 0.05);
+
+                angle[i] += turn[i];
+                var point = ps[i];
+                ps[i].setLocation(point.getX() + Math.cos(angle[i]) * 2, point.getY() + Math.sin(angle[i]) * 2);
+            }
+            path.newPath();
+        }
+
     }
 
     public static void main(String[] args) {
-        NPanel p = new Panel(800, 600);
-        NFrame f = new NFrame();
-
-        f.addWindowFocusListener(new WindowAdapter() {
-            public void windowGainedFocus(WindowEvent e) {
-                p.requestFocusInWindow();
-            }
-        });
-        f.add(p);
-        f.pack();
-        f.setLocationRelativeTo(null);
-
-        System.out.println("Hold left mouse button and drag to move around");
-        System.out.println("Scroll mouse wheel to zoom. Hold CTRL to increase zoom speed");
-
-        NMain main = new NMain(f);
+        NMain main = new NMain(new Panel(800, 600));
         main.run();
     }
 }

@@ -1,44 +1,68 @@
 package com.tmn.multisourcebfs;
 
+import com.tmn.graphic.NMain;
+import com.tmn.graphic.NPanel;
+import java.awt.Color;
+import java.awt.Graphics2D;
+
 public class Main {
 
-    public static void main(String[] args) throws InterruptedException {
-        Frame f = new Frame();
-        Panel p = new Panel(800, 800);
-        f.add(p);
-        f.pack();
-        f.setLocationRelativeTo(null);
+    static class Panel extends NPanel {
 
-        Thread drawThread = Thread.startVirtualThread(() -> {
-            double delta = 0;
-            double interval = 1000000000 / 60;
-            long lastTime = System.nanoTime();
-            while (f.isEnabled()) {
-                long currentTime = System.nanoTime();
-                delta += (currentTime - lastTime) / interval;
-                lastTime = currentTime;
-                if (delta >= 1) {
-                    f.repaint();
-                    delta--;
-                }
+        double delta;
+
+        public Panel(int width, int height) {
+            super(width, height);
+            bfs = new MultiSourceBFS(width, height, 0, 0, width, height);
+            bfs.randomWater(10);
+        }
+
+        @Override
+        public void draw(Graphics2D g2d) {
+            bfs.draw(g2d);
+        }
+
+        @Override
+        public void drawOriginal(Graphics2D g2d) {
+            g2d.setColor(Color.white);
+            g2d.fillRect(0, 0, 50, 30);
+            g2d.setColor(Color.black);
+            g2d.drawString(delta + "", 10, 10);
+        }
+
+        MultiSourceBFS bfs;
+        int waitBefore = 150, waitAfter = -1, delay;
+
+        public void update() {
+            if (waitBefore > 0) {
+                waitBefore--;
+                return;
             }
-        });
-        Thread updateThread = Thread.startVirtualThread(() -> {
-            double delta = 0;
-            double interval = 1000000000 / 60;
-            long lastTime = System.nanoTime();
-            while (f.isEnabled()) {
-                long currentTime = System.nanoTime();
-                delta += (currentTime - lastTime) / interval;
-                lastTime = currentTime;
-                if (delta >= 1) {
-                    p.update();
-                    delta--;
-                }
+            if (waitAfter > 0) {
+                waitAfter--;
+                return;
             }
-        });
-        drawThread.join();
-        updateThread.join();
-        System.out.println("Main");
+            if (delay > 0) {
+                delay--;
+                return;
+            } else {
+                delay = 0;
+            }
+            if (bfs.isDone()) {
+                bfs.reset(15);
+                waitAfter = 0;
+                return;
+            }
+            long s = System.nanoTime();
+            bfs.run(5);
+            long e = System.nanoTime();
+            delta = (e - s) * 1.0 / 1000000;
+        }
+
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        NMain main = new NMain(new Panel(800, 600));
+        main.run();
     }
 }

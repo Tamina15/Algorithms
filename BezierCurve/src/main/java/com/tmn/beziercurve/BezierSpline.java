@@ -20,13 +20,14 @@ public class BezierSpline implements Shape {
     private int looped;
 
     public BezierSpline(Point2D[] points) {
-        this(points, OPEN_LOOP);
+        this(points, CLOSED_LOOP);
     }
 
     public BezierSpline(Point2D[] points, int looped) {
         check(points);
         this.points = points;
         this.looped = looped;
+        path = new Path2D.Double();
         initPath();
     }
 
@@ -68,9 +69,8 @@ public class BezierSpline implements Shape {
                 s = PiecewiseQuadraticBezierCurves();
             }
         }
-        int windingRule = path != null ? path.getWindingRule() : Path2D.WIND_NON_ZERO;
-        path = new Path2D.Double(s);
-        path.setWindingRule(windingRule);
+        path.reset();
+        path.append(s, true);
     }
 
     private Path2D PiecewiseQuadraticBezierCurves() {

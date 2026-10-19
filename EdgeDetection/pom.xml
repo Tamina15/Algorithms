@@ -13,4 +13,11 @@
         <maven.compiler.target>21</maven.compiler.target>
         <exec.mainClass>com.tmn.edgedetection.Main</exec.mainClass>
     </properties>
+    <dependencies>
+        <dependency>
+            <groupId>com.tmn</groupId>
+            <artifactId>Graphic</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 </project>
