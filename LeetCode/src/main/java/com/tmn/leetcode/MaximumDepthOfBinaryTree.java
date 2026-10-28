@@ -3,7 +3,8 @@ package com.tmn.leetcode;
 /**
  * Given the root of a binary tree, return its maximum depth.
  *
- * A binary tree's maximum depth is the number of nodes along the longest path from the root node down to the farthest leaf node.
+ * A binary tree's maximum depth is the number of nodes along the longest path
+ * from the root node down to the farthest leaf node.
  *
  * @author NhatTranMinh
  */
@@ -19,3 +20,4 @@ public class MaximumDepthOfBinaryTree {
         return max + 1;
     }
 }
+// Oct 19, 2026, 11:47:22 AM to Oct 19, 2026, 11:47:37 AM

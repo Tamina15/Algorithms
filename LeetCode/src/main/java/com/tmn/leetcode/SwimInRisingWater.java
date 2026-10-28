@@ -33,7 +33,7 @@ public class SwimInRisingWater {
                 cells[i][j] = new Cell(grid[i][j], i, j);
             }
         }
-        PriorityQueue<Cell> queue = new PriorityQueue();
+        PriorityQueue<Cell> queue = new PriorityQueue<>();
         queue.add(cells[0][0]);
         cells[0][0].inqueue = true;
         int a = 0;

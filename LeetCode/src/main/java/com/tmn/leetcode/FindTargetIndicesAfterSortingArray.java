@@ -8,7 +8,9 @@ import java.util.List;
  *
  * A target index is an index i such that nums[i] == target.
  *
- * Return a list of the target indices of nums after sorting nums in non-decreasing order. If there are no target indices, return an empty list. The returned list must be sorted in increasing order.
+ * Return a list of the target indices of nums after sorting nums in non-decreasing order.
+ * If there are no target indices, return an empty list.
+ * The returned list must be sorted in increasing order.
  *
  * @author NhatTranMinh
  */
@@ -33,8 +35,9 @@ public class FindTargetIndicesAfterSortingArray {
         }
         return result;
     }
+
     public static void main(String[] args) {
-        int[] nums = new int[]{1,2,5,2,3};
+        int[] nums = new int[]{1, 2, 5, 2, 3};
         System.out.println(targetIndices(nums, 5));
     }
 }

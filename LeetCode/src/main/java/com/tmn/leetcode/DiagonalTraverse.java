@@ -26,7 +26,7 @@ public class DiagonalTraverse {
         while (i < result.length) {
             result[i] = mat[y][x];
             i++;
-            // if cannot go up, then go right and left
+            // if cannot go up, then go right
             if (y == 0 && dirY == -1) {
                 // if cannot go right, then go down
                 if (x == width - 1) {
@@ -34,11 +34,12 @@ public class DiagonalTraverse {
                 } else {
                     x++;
                 }
+                // change direction to down and left
                 dirX = -1;
                 dirY = 1;
                 continue;
             }
-            // if cannot go left, then go down and right
+            // if cannot go left, then go down 
             if (x == 0 && dirX == -1) {
                 // if cannot go down, then go right
                 if (y != height - 1) {
@@ -46,20 +47,23 @@ public class DiagonalTraverse {
                 } else {
                     x++;
                 }
+                // change direction to right and up
                 dirX = 1;
                 dirY = -1;
                 continue;
             }
-            // if cannot go down, then go right and up
+            // if cannot go down, then go right
             if (y == height - 1 && dirY == 1) {
                 x++;
+                // change direction to right and up
                 dirX = 1;
                 dirY = -1;
                 continue;
             }
-            // if cannot go right, then go down and left
+            // if cannot go right, then go down
             if (x == width - 1 && dirX == 1) {
                 y++;
+                // change direction to down and left
                 dirX = -1;
                 dirY = 1;
                 continue;
@@ -73,15 +77,14 @@ public class DiagonalTraverse {
     public static void main(String[] args) {
         int height, width;
         int[][] a;
-        height = 3;
-        width = 3;
+        height = 10;
+        width = 15;
         a = new int[height][width];
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
                 a[i][j] = i * width + j + 1;
-                System.out.print(a[i][j]);
             }
-            System.out.println("");
+            System.out.println(Arrays.toString(a[i]));
         }
         System.out.println(Arrays.toString(findDiagonalOrder(a)));
     }

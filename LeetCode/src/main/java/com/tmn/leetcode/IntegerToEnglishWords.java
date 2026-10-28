@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class IntegerToEnglishWords {
 
-    public static final Map<Integer, String> map = new HashMap();
+    public static final Map<Integer, String> map = new HashMap<>();
     public static final String MIN = "Negative Two Billion One Hundred Forty Seven Million Four Hundred Eighty Three Thousand Six Hundred Forty Eight";
 
     static {

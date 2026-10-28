@@ -1,15 +1,13 @@
 package com.tmn.leetcode;
 
-import java.util.Arrays;
-
 public class ClearDigits {
 
     public static String clearDigits(String s) {
         StringBuilder sb = new StringBuilder();
         for (char c : s.toCharArray()) {
-            if(c < 'a'){
-                sb.deleteCharAt(sb.length() -1);
-            } else{
+            if (c < 'a') {
+                sb.deleteCharAt(sb.length() - 1);
+            } else {
                 sb.append(c);
             }
         }
@@ -17,9 +15,6 @@ public class ClearDigits {
     }
 
     public static void main(String[] args) {
-        System.out.println(clearDigits("abc"));
-        String[] message = {"hello","programming","fun", "funny", "fanny"};
-        Arrays.sort(message);
-        System.out.println(Arrays.toString(message));
+        System.out.println(clearDigits("qm93xjkpaaovhqckjhg5j1o4rndtg3bobgeke"));
     }
 }

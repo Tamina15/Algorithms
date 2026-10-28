@@ -5,7 +5,9 @@ import java.util.Arrays;
 public class RotateArray {
 
     /**
-     * Given an integer array {@code nums}, rotate the array to the right by k steps, where k is non-negative.
+     * Given an integer array {@code nums},
+     * rotate the array to the right by k steps,
+     * where k is non-negative.
      * <br>
      * e.g:
      * <br>
@@ -33,7 +35,7 @@ public class RotateArray {
         int k = 1001;
         int[] nums = new int[n];
         Arrays.setAll(nums, (value) -> value);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 100; i++) {
             rotate(nums, k);
         }
         long start = System.nanoTime();

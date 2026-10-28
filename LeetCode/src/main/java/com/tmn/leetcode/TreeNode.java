@@ -9,20 +9,21 @@ public class TreeNode {
     TreeNode left;
     TreeNode right;
 
-    TreeNode() {
+    public TreeNode() {
+        this(0, null, null);
     }
 
     TreeNode(int val) {
-        this.val = val;
+        this(val, null, null);
     }
 
-    TreeNode(int val, TreeNode left, TreeNode right) {
+    public TreeNode(int val, TreeNode left, TreeNode right) {
         this.val = val;
         this.left = left;
         this.right = right;
     }
 
-    public static TreeNode createTree(Integer[] values) {
+    public static TreeNode createTree(Integer... values) {
         if (values == null || values.length == 0) {
             throw new IllegalArgumentException("Tree length must not be null or 0");
         }

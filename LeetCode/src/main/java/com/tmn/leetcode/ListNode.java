@@ -8,7 +8,8 @@ public class ListNode {
     int val;
     ListNode next;
 
-    ListNode() {
+    public ListNode() {
+        this(0);
     }
 
     ListNode(int val) {
@@ -32,6 +33,21 @@ public class ListNode {
             current = c;
         }
         return root;
+    }
+
+    public static ListNode fromRange(int start, int end) {
+        int n = Math.abs(end - start);
+        int[] array = new int[n];
+        if (end > start) {
+            for (int i = 0; i < n; i++) {
+                array[i] = i + start;
+            }
+        } else {
+            for (int i = 0; i < n; i++) {
+                array[i] = start - i;
+            }
+        }
+        return from(array);
     }
 
     public static ListNode randomize(int length) {
@@ -59,7 +75,7 @@ public class ListNode {
         int[] array = new int[length];
         Random random = new Random();
         for (int i = 0; i < array.length; i++) {
-            int index = random.nextInt(i);
+            int index = random.nextInt(i + 1);
             int temp = array[index];
             array[index] = i + startRange;
             array[i] = temp;

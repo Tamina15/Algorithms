@@ -66,8 +66,7 @@ public class FindElementsInAContaminatedBinaryTree {
     }
 
     public static void main(String[] args) {
-        Integer[] values = new Integer[]{-1, null, -1, -1, null, -1};
-        TreeNode root = TreeNode.createTree(values);
+        TreeNode root = TreeNode.createTree(-1, null, -1, -1, null, -1);
         FindElements fe = new FindElements(root);
         System.out.println(root);
         for (int i = 0; i < 70; i++) {

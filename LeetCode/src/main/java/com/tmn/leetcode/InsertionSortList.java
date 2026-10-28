@@ -1,29 +1,30 @@
 package com.tmn.leetcode;
 
-import java.util.Random;
+import java.util.ArrayList;
+import java.util.List;
 
 public class InsertionSortList {
 
     public static ListNode insertionSortList(ListNode head) {
-        ListNode start = head;
-        ListNode current = head.next;
-        while (current != null) {
-            
+        if (head == null || head.next == null) {
+            return head;
         }
-        return start;
+        List<ListNode> array = new ArrayList<>();
+        while (head != null) {
+            array.add(head);
+            head = head.next;
+        }
+        array.sort((o1, o2) -> o1.val - o2.val);
+        for (int i = 0; i < array.size() - 1; i++) {
+            array.get(i).next = array.get(i + 1);
+        }
+        array.getLast().next = null;
+        return array.get(0);
     }
- // not done
+
     public static void main(String[] args) {
-        int[] listNode = new int[100];
-        Random random = new Random();
-        for (int i = 0; i < listNode.length; i++) {
-            int index = random.nextInt(i + 1);
-            int temp = listNode[index];
-            listNode[index] = i;
-            listNode[i] = temp;
-        }
-        ListNode head = ListNode.from(listNode);
+        ListNode head = ListNode.fromRange(1000, 200);
         System.out.println(head);
-//        System.out.println(insertionSortList(head));
+        System.out.println(insertionSortList(head));
     }
 }

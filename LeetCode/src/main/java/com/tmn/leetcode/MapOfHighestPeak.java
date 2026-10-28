@@ -10,16 +10,16 @@ public class MapOfHighestPeak {
         int row = isWater.length;
         int col = isWater[0].length;
         int[][] result = new int[row][col];
-        // No need priority queue 
-        // because all elements that is added in the same loop will have equal value
+        // No need priority queue
+        // because all elements that are added in the same loop will have equal values
         // 200ms faster
-//        PriorityQueue<Integer[]> queue = new PriorityQueue<>((o1, o2) -> {
-//            if (result[o1[0]][o1[1]] < result[o2[0]][o2[1]]) {
-//                return 0;
-//            } else {
-//                return 1;
-//            }
-//        });
+        //PriorityQueue<Integer[]> queue = new PriorityQueue<>((o1, o2) -> {
+        //    if (result[o1[0]][o1[1]] < result[o2[0]][o2[1]]) {
+        //        return 0;
+        //    } else {
+        //        return 1;
+        //    }
+        //});
 
         // no need for Integer[]
         // 40ms faster

@@ -41,7 +41,8 @@ public class SingleElementInASortedArray {
         }
         int mid = (endInclusive - start) / 2 + start;
         if (nums[mid] == nums[mid - 1]) {
-            // if left part has odd number of elements, then the single value will be in that half
+            // if left part has odd number of elements,
+            // then the single value will be in that half
             // else it will be in the right part (minus the middle element)
             // (mid - start) == even means thst left part is odd
             if (((mid - start) % 2) == 0) {
@@ -77,7 +78,7 @@ public class SingleElementInASortedArray {
     }
 
     public static void main(String[] args) {
-//        int[] nums = {1, 1, 2, 2, 3, 3, 4};
+        // int[] nums = {1, 1, 2, 2, 3, 3, 4};
         int[] nums = random(1000);
         System.out.println(Arrays.toString(nums));
         System.out.println(singleNonDuplicate(nums));
