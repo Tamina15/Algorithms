@@ -7,14 +7,11 @@ public class DistinctSubsequences {
     }
 
     public static int distinct(char[] s, char[] t, int si, int ti) {
-        System.out.println(si + " " + ti);
-        if (si >= s.length) {
-            System.out.println("return 0");
-            return 0;
-        }
         if (ti >= t.length) {
-            System.out.println("return 1");
             return 1;
+        }
+        if (si >= s.length) {
+            return 0;
         }
         int to = 0;
         if (s[si] != t[ti]) {
@@ -26,10 +23,9 @@ public class DistinctSubsequences {
         return to;
     }
 
-    // Not done
     public static void main(String[] args) {
-        String s = "rabbbit";
-        String t = "rabbit";
+        String s = "aaddbacbbcabdbceaeeaacbabbbaccacaacbabeddbedcdceceeabccabdadccceebcbcbecdbacedcecdeadbaebceaedaaecbbebdecabbddccebaccabaaabbabceddceecadcccdceabbcdadbbadebdadeacbaddccdeebcddaebbcbedbd";
+        String t = "ccdeddeabb";
         System.out.println(s);
         System.out.println(t);
         System.out.println(numDistinct(s, t));
