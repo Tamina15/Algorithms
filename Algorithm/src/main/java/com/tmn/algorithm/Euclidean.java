@@ -51,13 +51,16 @@ public class Euclidean {
     }
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Nhap so a:");
-        int a = Integer.parseInt(scanner.nextLine());
-        System.out.println("Nhap so b:");
-        int b = Integer.parseInt(scanner.nextLine());
-        Euclidean e = new Euclidean();
-        e.Euclid_mo_rong(a, b);
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.println("Nhap so a:");
+            int a = Integer.parseInt(scanner.nextLine());
+            System.out.println("Nhap so b:");
+            int b = Integer.parseInt(scanner.nextLine());
+            Euclidean e = new Euclidean();
+            e.Euclid_mo_rong(a, b);
+        } catch (NumberFormatException e) {
+            System.out.println("Vui long nhap so");
+        }
 
     }
 

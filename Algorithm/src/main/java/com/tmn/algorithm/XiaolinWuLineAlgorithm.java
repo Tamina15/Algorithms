@@ -8,15 +8,20 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.LockSupport;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 
 /**
  *
@@ -25,56 +30,158 @@ import javax.swing.JPanel;
  */
 public class XiaolinWuLineAlgorithm {
 
-    public static void main(String[] args) {
-        Frame frame = new Frame();
-    }
+    static class Panel extends JPanel {
 
-    static class Panel extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener {
+        public int width, height;
+        double originX, originY, oldOriginX, oldOriginY, anchorX, anchorY, mouseWorldX, mouseWorldY, currentMouseX, currentMouseY;
+        private double scale = 1;
+        double zoomFactor = 1.05, inversedZoomFactor = 1 / zoomFactor, minScale = 0.15, maxScale = 15.3674;
 
-        int panelWidth = 800;
-        int panelHeight = 800;
-        // Zomming
-        Double zoomFactor = 1.0d;
-        boolean zoomer;
-        AffineTransform at;
-
-        public Panel() {
-            this.setPreferredSize(new Dimension(panelWidth, panelHeight));
-            this.setDoubleBuffered(true);
-            this.setBackground(Color.black);
-            this.setFocusable(true);
-            this.addMouseListener(this);
-            this.addMouseWheelListener(this);
-            this.addMouseMotionListener(this);
+        public Panel(int width, int height) {
+            super();
+            this.width = width;
+            this.height = height;
+            setPreferredSize(new Dimension(width, height));
+            setBackground(Color.BLACK);
+            setFocusable(true);
+            addMouseListeners();
         }
-        int count = 0;
 
-        public void plot(Graphics2D g2d, double x, double y, double alpha) {
-            g2d.setColor(new Color(255, 255, 255, (int) (alpha * 255)));
-//            g2d.setColor(Color.white);
-            g2d.drawLine((int) x, (int) y, (int) x, (int) y);
-            if (count == 0) {
-                System.out.println(x + " " + y + " " + alpha);
+        private void addMouseListeners() {
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    if (SwingUtilities.isLeftMouseButton(e)) {
+                        setAnchorPoint(e);
+                        if (getPointOnClick(pointA) || getPointOnClick(pointB)) {
+                            System.out.println(p);
+                            return;
+                        }
+                        p = null;
+                        cp = null;
+                    }
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    p = null;
+                    cp = null;
+                }
+
+            });
+
+            addMouseMotionListener(new MouseMotionAdapter() {
+                @Override
+                public void mouseDragged(MouseEvent e) {
+                    currentMouse(e);
+                    if (SwingUtilities.isLeftMouseButton(e)) {
+                        drag(e);
+                    }
+                }
+
+                @Override
+                public void mouseMoved(MouseEvent e) {
+                    currentMouse(e);
+                    move(e);
+                }
+            });
+
+            addMouseWheelListener((MouseWheelEvent e) -> zoom(e));
+        }
+
+        private void currentMouse(MouseEvent e) {
+            currentMouseX = e.getX();
+            currentMouseY = e.getY();
+        }
+
+        protected void setAnchorPoint(MouseEvent e) {
+            oldOriginX = originX;
+            oldOriginY = originY;
+
+            anchorX = e.getX();
+            anchorY = e.getY();
+        }
+
+        protected void move(MouseEvent e) {
+            mouseWorldX = (currentMouseX - originX) / scale;
+            mouseWorldY = (currentMouseY - originY) / scale;
+        }
+
+        protected void drag(MouseEvent e) {
+            double dx = ((e.getX() - anchorX));
+            double dy = ((e.getY() - anchorY));
+            if (p != null) {
+                p.setLocation((cp.getX() + dx / scale), (cp.getY() + dy / scale));
+                originX = oldOriginX;
+                originY = oldOriginY;
+            } else {
+                originX = oldOriginX + dx;
+                originY = oldOriginY + dy;
             }
         }
 
-        public double ipart(double x) {
-            return Math.floor(x);
+        protected void zoom(MouseWheelEvent e) {
+            double oldScale = scale;
+
+            if (e.getWheelRotation() < 0) {
+                scale *= zoomFactor;
+            } else if (e.getWheelRotation() > 0) {
+                scale *= inversedZoomFactor;
+            }
+
+            if (Math.abs(scale - 1) < 0.04) {
+                scale = 1;
+            } else {
+                scale = Math.clamp(scale, minScale, maxScale);
+            }
+
+            if (scale == oldScale) {
+                return;
+            }
+
+            double x = e.getX();
+            double y = e.getY();
+
+            // World position currently under the mouse
+            double worldX = (x - originX) / oldScale;
+            double worldY = (y - originY) / oldScale;
+
+            // Move origin so the same world point stays under the mouse
+            originX = x - worldX * scale;
+            originY = y - worldY * scale;
         }
 
-        public double round(double x) {
-            return ipart(x + 0.5d);
+        boolean getPointOnClick(Point2D point) {
+            if (point.distance(mouseWorldX, mouseWorldY) < 10) {
+                p = point;
+                cp = new Point2D.Double(point.getX(), point.getY());
+                return true;
+            }
+            return false;
         }
 
-        public double fpart(double x) {
-            return x - ipart(x);
-        }
+        int count = 0;
 
-        public double rfpart(double x) {
-            return 1 - fpart(x);
-        }
+        @Override
+        public void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g;
+            AffineTransform at = g2d.getTransform();
+            g2d.translate(originX, originY);
+            g2d.scale(scale, scale);
 
-        public void drawLine(double x0, double y0, double x1, double y1, Graphics2D g2d) {
+            drawLine(pointA, pointB, g2d);
+
+            // Restore the original AffineTransform
+            g2d.setTransform(at);
+        }
+        Point2D p, cp;
+        Point2D pointA = new Point2D.Double(150, 150);
+        Point2D pointB = new Point2D.Double(300, 300);
+
+        public void drawLine(Point2D a, Point2D b, Graphics2D g2d) {
+            double x0 = a.getX(), y0 = a.getY(), x1 = b.getX(), y1 = b.getY();
+
             boolean steep = Math.abs(y1 - y0) > Math.abs(x1 - x0);
             if (steep) {
                 //swap(x0, y0)
@@ -147,163 +254,105 @@ public class XiaolinWuLineAlgorithm {
             count = 1;
         }
 
-        @Override
-        public void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2d = (Graphics2D) g;
-            // Zooming
-            if (zoomer == true) {
-                at = new AffineTransform();
-                at.scale(zoomFactor, zoomFactor);
-                //zoomer = false;
-                g2d.transform(at);
+        public void plot(Graphics2D g2d, double x, double y, double alpha) {
+            int c = (int) (alpha * 255);
+            g2d.setColor(new Color(c, c, c));
+//            g2d.setColor(Color.white);
+            g2d.drawLine((int) x, (int) y, (int) x, (int) y);
+            if (count == 0) {
+                System.out.println(x + " " + y + " " + alpha);
             }
-            ////
-
-            // Dragging
-            g2d.translate(oX, oY);
-            ///////////
-
-            drawLine(0, 0, 500, 400, g2d);
-            g2d.dispose();
-            g.dispose();
         }
 
-        private void update() {
+        public double ipart(double x) {
+            return Math.floor(x);
         }
 
-        public Double getZoomFactor() {
-            return zoomFactor;
+        public double round(double x) {
+            return ipart(x + 0.5d);
         }
 
-        public void setZoomFactor(double factor) {
-            if (factor < this.zoomFactor) {
-                this.zoomFactor = this.zoomFactor / 1.1;
-            } else {
-                this.zoomFactor = factor;
-            }
-            this.zoomer = true;
+        public double fpart(double x) {
+            return x - ipart(x);
         }
 
-        @Override
-        public void mouseClicked(MouseEvent e) {
+        public double rfpart(double x) {
+            return 1 - fpart(x);
         }
 
-        @Override
-        public void mousePressed(MouseEvent e) {
-
-        }
-        int startX = 0;
-        int startY = 0;
-        int offsetX = 0;
-        int offsetY = 0;
-        int oX;
-        int oY;
-        boolean press = false;
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            press = false;
-        }
-
-        @Override
-        public void mouseEntered(MouseEvent e) {
-
-        }
-
-        @Override
-        public void mouseExited(MouseEvent e) {
-
-        }
-
-        @Override
-        public void mouseWheelMoved(MouseWheelEvent e) {
-            //Zoom in
-            if (e.getWheelRotation() < 0) {
-                this.setZoomFactor(1.1 * this.getZoomFactor());
-
-            }
-            //Zoom out
-            if (e.getWheelRotation() > 0) {
-                if (this.getZoomFactor() / 1.1 > 1) {
-                    this.setZoomFactor(this.getZoomFactor() / 1.1);
-                } else {
-                    this.setZoomFactor(1);
-                }
-            }
-
-        }
-
-        @Override
-        public void mouseDragged(MouseEvent e) {
-            if (!press) {
-                offsetX = oX;
-                offsetY = oY;
-                startX = e.getXOnScreen();
-                startY = e.getYOnScreen();
-                press = true;
-            }
-            oX = e.getXOnScreen() - startX + offsetX;
-            oY = e.getYOnScreen() - startY + offsetY;
-        }
-
-        @Override
-        public void mouseMoved(MouseEvent e) {
+        public void update() {
         }
 
     }
 
-    static class Frame extends JFrame implements Runnable {
+    private static final AtomicBoolean running = new AtomicBoolean(true);
 
-        Thread thread;
-        public final int FPS = 60;
-        public static String FPScount = "NaN";
-        public static double delta = 0;
-        public static boolean updating;
+    public static void main(String[] args) {
+        JFrame frame = new JFrame();
+        frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        frame.setVisible(true);
+        frame.setEnabled(true);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                running.set(false);
+                frame.dispose();
+            }
+        });
+        Panel panel = new Panel(800, 600);
+        frame.add(panel);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
 
-        Panel panel;
-
-        Frame() {
-            this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            panel = new Panel();
-            this.add(panel);
-            this.pack();
-            this.setResizable(false);
-            this.setLocationRelativeTo(null);
-            this.setBackground(Color.black);
-            this.setVisible(true);
-            newThread();
-        }
-
-        private void newThread() {
-            thread = new Thread(this);
-            thread.start();
-        }
-
-        @Override
-        public void run() {
-            double drawInterval = 1000000000 / FPS;
-            long lastTime = System.nanoTime();
-            long timer = 0;
-            int count = 0;
-            while (thread != null) {
-                long currentTime = System.nanoTime();
-                delta += (currentTime - lastTime) / drawInterval;
-                timer += (currentTime - lastTime);
-                lastTime = currentTime;
-                if (delta >= 1) {
-                    panel.repaint();
-                    delta--;
-                    count++;
-                }
-                if (timer >= 1000000000) {
-                    FPScount = "" + count;
-                    panel.update();
-                    count = 0;
-                    timer = 0;
-                    updating = false;
+        Thread drawThread = Thread.startVirtualThread(() -> {
+            final long frameTime = 1_000_000_000L / 60;
+            long next = System.nanoTime();
+            while (running.get()) {
+                SwingUtilities.invokeLater(frame::repaint);
+                next += frameTime;
+                long sleep = next - System.nanoTime();
+                if (sleep > 0) {
+                    LockSupport.parkNanos(sleep);
                 }
             }
+        });
+
+        Thread updateThread = Thread.startVirtualThread(() -> {
+            final long interval = 1_000_000_000L / 60;
+            long previous = System.nanoTime();
+            long accumulator = 0;
+
+            long next = System.nanoTime();
+
+            while (running.get()) {
+                long now = System.nanoTime();
+                accumulator += now - previous;
+                previous = now;
+                while (accumulator >= interval) {
+                    panel.update();
+                }
+
+                next += interval;
+                while (true) {
+                    long remaining = next - System.nanoTime();
+
+                    if (remaining <= 0) {
+                        break;
+                    }
+
+                    if (remaining > 1_000_000) {
+                        LockSupport.parkNanos(remaining - 500_000);
+                    } else {
+                        Thread.onSpinWait();
+                    }
+                }
+            }
+        });
+        try {
+            drawThread.join();
+            updateThread.join();
+        } catch (InterruptedException ex) {
         }
+        System.out.println("Main");
     }
 }

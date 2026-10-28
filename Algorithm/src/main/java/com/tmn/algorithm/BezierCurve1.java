@@ -1,6 +1,5 @@
 package com.tmn.algorithm;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -15,22 +14,15 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.CubicCurve2D;
-import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
-import java.awt.geom.PathIterator;
-import java.awt.geom.QuadCurve2D;
-import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 
 public class BezierCurve1 {
 
     static class Panel extends JPanel {
 
-        private final JPanel panel = this;
         private int width, height;
         private final Point.Double origin = new Point.Double();
         private final Point.Double oldOrigin = new Point.Double();

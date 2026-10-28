@@ -85,15 +85,16 @@ public class VigenereCipher {
 
     public static void main(String[] args) {
         String key = "";
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Input keyword: ");
-        key = scanner.nextLine();
-        System.out.println("Input Plaintext: ");
-        String text = scanner.nextLine();
-        VigenereCipher vi = new VigenereCipher(key);
-        String cipher = vi.Encode(text);
-        System.out.println("Encoded: " + cipher);
-        String plaintext = vi.Decode(cipher);
-        System.out.println("Decoded: " + plaintext);
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.println("Input keyword: ");
+            key = scanner.nextLine();
+            System.out.println("Input Plaintext: ");
+            String text = scanner.nextLine();
+            VigenereCipher vi = new VigenereCipher(key);
+            String cipher = vi.Encode(text);
+            System.out.println("Encoded: " + cipher);
+            String plaintext = vi.Decode(cipher);
+            System.out.println("Decoded: " + plaintext);
+        }
     }
 }

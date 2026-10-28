@@ -44,41 +44,44 @@ public class ClimateSpiral extends JPanel {
         this.setFocusable(true);
         table = readCSV("public/GlobalTempMean.csv");
         months = table.get(0).subList(1, 13);
-        years = new ArrayList();
+        years = new ArrayList<>();
         rowCount = table.size() - 1;
         data = new float[rowCount][12];
         for (int i = 1; i < table.size(); i++) {
             for (int j = 1; j < 13; j++) {
                 try {
-                    data[i - 1][j - 1] = Float.valueOf(table.get(i).get(j));
+                    data[i - 1][j - 1] = Float.parseFloat(table.get(i).get(j));
                 } catch (NumberFormatException e) {
                     data[i - 1][j - 1] = 0;
                 }
             }
-            years.add(Integer.parseInt(table.get(i).get(0)));
+            years.add(Integer.valueOf(table.get(i).get(0)));
         }
 
     }
 
     private ArrayList<ArrayList<String>> readCSV(String name) {
-        ArrayList<ArrayList<String>> temp_table = new ArrayList();
+        ArrayList<ArrayList<String>> temp_table = new ArrayList<>();
         try {
             File f = new File(name);
-            Scanner sc = new Scanner(f);
-            while (sc.hasNextLine()) {
-                Scanner sc2 = new Scanner(sc.nextLine());
-                sc2.useDelimiter(",");
-                ArrayList<String> d = new ArrayList();
-                while (sc2.hasNext()) {
-                    d.add(sc2.next());
+            try (Scanner sc = new Scanner(f)) {
+                while (sc.hasNextLine()) {
+                    try (Scanner sc2 = new Scanner(sc.nextLine())) {
+                        sc2.useDelimiter(",");
+                        ArrayList<String> d = new ArrayList<>();
+                        while (sc2.hasNext()) {
+                            d.add(sc2.next());
+                        }
+                        temp_table.add(d);
+                    }
                 }
-                temp_table.add(d);
             }
         } catch (FileNotFoundException ex) {
             Logger.getLogger(ClimateSpiral.class.getName()).log(Level.SEVERE, null, ex);
         }
         return temp_table;
     }
+
     int fontWidth = 20;
     int monthCircle = 600;
     int bigCircle = 500;

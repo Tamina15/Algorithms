@@ -35,7 +35,7 @@ public class QuadTree {
         halfWidth = this.boundary.width / 2;
         halfHeight = this.boundary.height / 2;
         this.maxCapacity = maxCapacity;
-        points = new ArrayList();
+        points = new ArrayList<>();
         isDivided = false;
     }
 

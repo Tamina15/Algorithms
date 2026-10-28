@@ -30,7 +30,7 @@ public class PolygonUtils {
         if (clockwiseness == -1) {
             indexes = indexes.reversed();
         }
-        ArrayList<Point2D> vertices = new ArrayList(length * 3);
+        ArrayList<Point2D> vertices = new ArrayList<>(length * 3);
         int cl = indexes.size();
         outer:
         while (indexes.size() > 3) {

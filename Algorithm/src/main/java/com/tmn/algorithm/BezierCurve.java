@@ -23,18 +23,17 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 
 public class BezierCurve {
 
     static class Panel extends JPanel {
 
-        private final JPanel panel = this;
         private int width, height;
         private final Point.Double origin = new Point.Double();
         private final Point.Double oldOrigin = new Point.Double();
         private final Point.Double mousePt = new Point.Double(), mouseWorld = new Point.Double();
-        private double scale = 1, zoomFactor = 1.05, inversedZoomFactor = 1 / zoomFactor, minScale = 0.15, maxScale = 15.3674;
+        private double scale = 1, zoomFactor = 1.05, inversedZoomFactor = 1 / zoomFactor, minScale = 0.15,
+                maxScale = 15.3674;
 
         public Panel(int width, int height) {
             this.width = width;

@@ -303,7 +303,7 @@ public class CannyEdgeDetection {
     }
 
     public void hysteresis() {
-        Queue<int[]> queue = new LinkedList();
+        Queue<int[]> queue = new LinkedList<>();
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
                 hysteresis[row][col] = doubleThresholding[row][col];

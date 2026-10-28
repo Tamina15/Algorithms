@@ -5,7 +5,6 @@
  */
 package com.tmn.algorithm;
 
-import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -57,7 +56,7 @@ public class SelectionSort {
         System.out.println("Start time: " + timeStart + "; End time: " + timeEnd + "; Total: " + time);
     }
 
-    public void swap(int values[], int a, int b) {
+    private void swap(int values[], int a, int b) {
         int temp = values[a];
         values[a] = values[b];
         values[b] = temp;

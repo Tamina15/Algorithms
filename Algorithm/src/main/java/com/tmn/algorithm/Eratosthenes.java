@@ -22,7 +22,7 @@ public class Eratosthenes {
         return n > 1;
     }
 
-    public boolean[] Eratos(int n) {
+    public boolean[] EratosthenesSeive(int n) {
         boolean[] snt = new boolean[n];
         for (int i = 0; i < n; i++) {
             snt[i] = true;
@@ -47,9 +47,9 @@ public class Eratosthenes {
         System.out.println("Nhap vao so nguyen duong:");
         n = Integer.parseInt(s.nextLine());
         long ts = System.nanoTime();
-        boolean[] snt = e.Eratos(n);
+        boolean[] snt = e.EratosthenesSeive(n);
         long te = System.nanoTime();
-        System.out.println((te-ts)/1000000000f);
+        System.out.println((te - ts) * 1.0 / 1_000_000 + " ms");
 //        for (int i = 0; i < n; i++) {
 //            if (snt[i]) {
 //                System.out.println(i + " là so nguyen to");

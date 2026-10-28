@@ -19,7 +19,6 @@ import java.awt.geom.Line2D;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 
 public class NewtonsMethod {
 

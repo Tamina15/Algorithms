@@ -22,7 +22,7 @@ public class KhoangCachNganNhat {
 
     Scanner scanner = new Scanner(System.in);
     Point[] points;
-    ArrayList<Point> ps = new ArrayList();
+    ArrayList<Point> ps = new ArrayList<>();
     Random random = new Random();
     File f = new File("src/main/java/com/mycompany/algorithm/point.txt");
 
@@ -30,25 +30,27 @@ public class KhoangCachNganNhat {
     }
 
     public KhoangCachNganNhat(int n, int dis) {
-        //RandomArray(n, dis);
+        // RandomArray(n, dis);
     }
 
     public void Random() throws IOException {
-        FileWriter w = new FileWriter(f);
-        for (int i = 0; i < 10000; i++) {
-            w.write((random.nextInt(Integer.MAX_VALUE)) + " " + (random.nextInt(Integer.MAX_VALUE)) + "\n");
-            w.flush();
+        try (FileWriter w = new FileWriter(f)) {
+            for (int i = 0; i < 10000; i++) {
+                w.write((random.nextInt(Integer.MAX_VALUE)) + " " + (random.nextInt(Integer.MAX_VALUE)) + "\n");
+                w.flush();
+            }
         }
-        w.close();
     }
 
     public void File() throws IOException {
-        Scanner sc = new Scanner(f);
-        while (sc.hasNextLine()) {
-            String s = sc.nextLine();
-            StringTokenizer st = new StringTokenizer(s, " ");
-            Point p = new Point(Integer.parseInt(st.nextToken()), Integer.parseInt(st.nextToken()));
-            ps.add(p);
+        try (Scanner sc = new Scanner(f)) {
+            while (sc.hasNextLine()) {
+                String s = sc.nextLine();
+                StringTokenizer st = new StringTokenizer(s, " ");
+                Point p = new Point(Integer.parseInt(st.nextToken()), Integer.parseInt(st.nextToken()));
+                ps.add(p);
+            }
+        } catch (NumberFormatException e) {
         }
         points = new Point[ps.size()];
         points = ps.toArray(points);
@@ -56,7 +58,7 @@ public class KhoangCachNganNhat {
 
     public void RandomArray(int n, int dis) {
         points = new Point[n];
-        
+
         for (int i = 0; i < n; i++) {
             points[i] = new Point();
             points[i].x = random.nextInt(dis) + 1;
@@ -143,7 +145,7 @@ public class KhoangCachNganNhat {
         double dr = ShortestPairFast(array, mid, end);
         double d = dl <= dr ? dl : dr;
 
-        ArrayList<Point> ArrayStrip = new ArrayList();
+        ArrayList<Point> ArrayStrip = new ArrayList<>();
         for (int i = start; i <= end; i++) {
             if (Math.abs(array[i].x - midPoint.x) <= d) {
                 ArrayStrip.add(array[i]);
@@ -206,8 +208,7 @@ public class KhoangCachNganNhat {
         strip = ArrayStrip.toArray(strip);
 
         // Find the closest points in strip.
-        // Return the minimum of d and closest
-        // distance is strip[]
+        // Return the minimum of d and closest distance is strip[]
         double min = stripClosest(strip, strip.length, d);
 
         return min < d ? min : d;

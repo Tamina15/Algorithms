@@ -119,24 +119,25 @@ public class AffineCipher {
     public void SetB(int b) {
         this.b = b;
     }
+
     public static void main(String[] args) {
         int a, b;
         Scanner scanner = new Scanner(System.in);
-        
+
         System.out.println("Input a:");
         a = Integer.parseInt(scanner.nextLine());
-        
+
         System.out.println("Input b:");
         b = Integer.parseInt(scanner.nextLine());
-        
+
         System.out.println("Input plaintext:");
         String text = scanner.nextLine();
-        
+
         AffineCipher af = new AffineCipher(a, b);
-        
+
         String cipher = af.Encode(text);
         System.out.println("Encoded: " + cipher);
-        
+
         String plaintext = af.Decode(cipher);
         System.out.println("Decoded: " + plaintext);
 

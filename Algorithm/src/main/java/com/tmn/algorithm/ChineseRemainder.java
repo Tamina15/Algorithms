@@ -48,14 +48,16 @@ public class ChineseRemainder {
     }
 
     public void Input(int n, int[] a, int[] m) {
-        Scanner s = new Scanner(System.in);
-        for (int i = 0; i < n; i++) {
-            System.out.println("Nhap a" + i);
-            a[i] = Integer.parseInt(s.nextLine());
-        }
-        for (int i = 0; i < n; i++) {
-            System.out.println("Nhap m" + i);
-            m[i] = Integer.parseInt(s.nextLine());
+        try (Scanner s = new Scanner(System.in)) {
+            for (int i = 0; i < n; i++) {
+                System.out.println("Nhap a" + i);
+                a[i] = Integer.parseInt(s.nextLine());
+            }
+            for (int i = 0; i < n; i++) {
+                System.out.println("Nhap m" + i);
+                m[i] = Integer.parseInt(s.nextLine());
+            }
+        } catch (NumberFormatException e) {
         }
 
     }
@@ -94,19 +96,22 @@ public class ChineseRemainder {
     }
 
     public static void main(String[] args) {
-        Scanner s = new Scanner(System.in);
-        int n;
-        System.out.println("Nhap n:");
-        n = Integer.parseInt(s.nextLine());
-        ChineseRemainder cr = new ChineseRemainder(n);
-        int[] a = new int[n], m = new int[n], Mn, y;
-        cr.Input(n, a, m);
-        // Giai
-        int M = cr.Calculate_M(m);
-        Mn = cr.Calculate_Mn(m, M);
-        y = cr.Calculate_Y(Mn, m);
-        int x = cr.Calculate_X(M, a, Mn, y);
-        System.out.println("x = " + x);
-        System.out.println("Dap an co dang: x = " + x + " + k." + M);
+        try (Scanner s = new Scanner(System.in)) {
+            int n;
+            System.out.println("Nhap n:");
+            n = Integer.parseInt(s.nextLine());
+            ChineseRemainder cr = new ChineseRemainder(n);
+            int[] a = new int[n], m = new int[n], Mn, y;
+            cr.Input(n, a, m);
+            // Giai
+            int M = cr.Calculate_M(m);
+            Mn = cr.Calculate_Mn(m, M);
+            y = cr.Calculate_Y(Mn, m);
+            int x = cr.Calculate_X(M, a, Mn, y);
+            System.out.println("x = " + x);
+            System.out.println("Dap an co dang: x = " + x + " + k." + M);
+        } catch (NumberFormatException e) {
+            System.out.println("Vui long nhap so");
+        }
     }
 }

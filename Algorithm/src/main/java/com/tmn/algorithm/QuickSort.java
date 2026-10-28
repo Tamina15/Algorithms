@@ -44,7 +44,7 @@ public class QuickSort {
         System.out.println("Start time: " + timeStart + "; End time: " + timeEnd + "; Total: " + time);
     }
 
-    public void quickSort(int values[], int start, int end) {
+    private void quickSort(int values[], int start, int end) {
         if (start < end) {
             int index = partition(values, start, end);
             quickSort(values, start, index - 1);

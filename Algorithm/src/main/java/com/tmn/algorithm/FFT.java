@@ -37,11 +37,11 @@ public class FFT {
      * @see https://courses.washington.edu/matlab1/Lesson_11.html
      *
      * @param resolution the number of data points
-     * @param totalTime how many period of this wave will be sample
-     * @param frequency the frequency of the wave
-     * @param amplitude the strength of the sinusoid wave
-     * @param phase the phase of the sinusoid wave
-     * @param random choose whether to add randomness to the wave
+     * @param totalTime  how many period of this wave will be sample
+     * @param frequency  the frequency of the wave
+     * @param amplitude  the strength of the sinusoid wave
+     * @param phase      the phase of the sinusoid wave
+     * @param random     choose whether to add randomness to the wave
      *
      * @return the Complex array containing the points
      */
@@ -67,11 +67,11 @@ public class FFT {
      * @see https://courses.washington.edu/matlab1/Lesson_11.html
      *
      * @param resolution the number of data points
-     * @param totalTime how many period of this wave will be sample
-     * @param frequency the frequency of the wave
-     * @param amplitude the strength of the sinusoid wave
-     * @param phase the phase of the sinusoid wave
-     * @param random choose whether to add randomness to the wave
+     * @param totalTime  how many period of this wave will be sample
+     * @param frequency  the frequency of the wave
+     * @param amplitude  the strength of the sinusoid wave
+     * @param phase      the phase of the sinusoid wave
+     * @param random     choose whether to add randomness to the wave
      *
      * @return the Complex array containing the points
      */
@@ -95,7 +95,7 @@ public class FFT {
     static double DT = 1 / (N * 1.0);
     static double[] T = new double[N];
 
-    static ArrayList<Complex[]> list_sinewave = new ArrayList();
+    static ArrayList<Complex[]> list_sinewave = new ArrayList<>();
 
     static Complex[] sum_fourier;
     static Complex[] cos;

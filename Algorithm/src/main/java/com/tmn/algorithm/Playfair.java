@@ -37,7 +37,7 @@ public class Playfair {
         // For every character in the key
         for (int i = 0; i < key_array.length; i++) {
             // If that character have NOT been used
-            //(key_array[i] - 'A') % 26, index of character in english alphabet
+            // (key_array[i] - 'A') % 26, index of character in english alphabet
             if (!used_character[(key_array[i] - 'A') % 26]) {
                 // Set the value of the key matrix at row = j/5, column = j%5 to that character
                 key_matrix[j / 5][j % 5] = key_array[i];
@@ -211,15 +211,16 @@ public class Playfair {
 //        String cipher = playfair.Encode("dajhocsaigon");
 //        System.out.println(cipher);
 //        System.out.println(playfair.Decode(cipher));
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Input key:");
-        String key = scanner.nextLine();
-        System.out.println("Input plaintext:");
-        String text = scanner.nextLine();
-        Playfair playfair = new Playfair(key);
-        String cipher = playfair.Encode(text);
-        System.out.println(cipher);
-        System.out.println(playfair.Decode(cipher));
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.println("Input key:");
+            String key = scanner.nextLine();
+            System.out.println("Input plaintext:");
+            String text = scanner.nextLine();
+            Playfair playfair = new Playfair(key);
+            String cipher = playfair.Encode(text);
+            System.out.println(cipher);
+            System.out.println(playfair.Decode(cipher));
+        }
 
     }
 

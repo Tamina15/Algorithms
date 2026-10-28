@@ -26,18 +26,19 @@ public class FastExponent {
     }
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        try {
-            System.out.println("Nhap a :");
-            long a = Long.parseLong(scanner.nextLine());
-            System.out.println("Nhap x :");
-            long x = Long.parseLong(scanner.nextLine());
-            System.out.println("Nhap n :");
-            long n = Long.parseLong(scanner.nextLine());
-            long exp = mod_exp(a, x, n);
-            System.out.println("\n(" + a + " ^ " + x + ") mod " + n + " = " + exp);
-        } catch (NumberFormatException e) {
-            System.out.println("Vui long nhap so");
+        try (Scanner scanner = new Scanner(System.in)) {
+            try {
+                System.out.println("Nhap a :");
+                long a = Long.parseLong(scanner.nextLine());
+                System.out.println("Nhap x :");
+                long x = Long.parseLong(scanner.nextLine());
+                System.out.println("Nhap n :");
+                long n = Long.parseLong(scanner.nextLine());
+                long exp = mod_exp(a, x, n);
+                System.out.println("\n(" + a + " ^ " + x + ") mod " + n + " = " + exp);
+            } catch (NumberFormatException e) {
+                System.out.println("Vui long nhap so");
+            }
         }
     }
 }

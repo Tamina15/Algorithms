@@ -29,8 +29,9 @@ public class Ceasar {
     public static void main(String[] args) {
         char[] character;
         System.out.println("Nhap chuoi:");
-        Scanner scanner = new Scanner(System.in);
-        character = scanner.nextLine().toLowerCase().toCharArray();
+        try (Scanner scanner = new Scanner(System.in)) {
+            character = scanner.nextLine().toLowerCase().toCharArray();
+        }
         char[] text = new char[character.length];
         for (int i = 1; i <= 26; i++) {
             for (int j = 0; j < character.length; j++) {
