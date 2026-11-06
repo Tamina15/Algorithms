@@ -92,6 +92,56 @@ public class FindEventualSafeStates {
         return list;
     }
 
+    public static List<Integer> eventualSafeNodes2(int[][] graph) {
+        int[] cache = new int[graph.length];
+        List<Integer> list = new ArrayList<>();
+        int n = graph.length * 2 + 1;
+//        for (int[] graph1 : graph) {
+//            n += graph1.length;
+//        }
+        int[] stack = new int[n];
+        n = 0;
+        for (int i = 0; i < graph.length; i++) {
+            if (graph[i].length == 0) {
+                cache[i] = 3;
+            } else {
+                stack[n++] = i;
+            }
+        }
+        while (n >= 0) {
+            int i = stack[n];
+            if (cache[i] > 0) {
+                n--;
+                continue;
+            }
+            boolean success = true, traverseChild = false;
+            for (int j = 0; j < graph[i].length; j++) {
+                int v = graph[i][j];
+                if (cache[v] == 3) {
+                    continue;
+                }
+                // looped, can not reach safe node
+                if (cache[v] == 1 || cache[v] == 2) {
+                    cache[i] = 2;
+                    success = false;
+                    break;
+                }
+                cache[i] = 1;
+                stack[++n] = v;
+                traverseChild = true;
+            }
+            if (!traverseChild && success) {
+                cache[i] = 3;
+            }
+        }
+        for (int i = 0; i < cache.length; i++) {
+            if (cache[i] == 3) {
+                list.add(i);
+            }
+        }
+        return list;
+    }
+
     static void print(int[] stack) {
         StringBuilder sb = new StringBuilder("[");
         for (var s : stack) {
@@ -111,7 +161,20 @@ public class FindEventualSafeStates {
     }
 
     public static void main(String[] args) {
+//        int[][] graph = {{1}, {2}, {3}, {4}, {5}, {6}, {}};
+//        int[][] graph = {{1, 2, 3, 4, 5, 6}, {}, {}, {}, {}, {}, {6, 5, 4, 3, 2, 1}};
+//        int[][] graph = {{1, 2, 3, 4}, {1, 2}, {3, 4}, {0, 4}, {}};
+//        int[][] graph = {{}, {0, 2, 3, 4}, {3}, {4}, {}};
+//        int[][] graph = {{17, 21, 22, 27}, {11, 12, 14, 19, 23}, {4, 27}, {16, 18, 20, 27}, {5, 14, 19, 27, 28}, {7, 15, 21, 25, 29}, {7, 10, 18, 28}, {12, 14, 21, 23, 29}, {9, 12, 18, 22, 24}, {19, 21, 25}, {15, 18, 21, 28}, {19, 23, 24, 28}, {13, 19, 21}, {14, 19, 25}, {2, 26, 27}, {1}, {4}, {3, 23, 24, 25, 26}, {19, 20, 24, 27, 29}, {23, 25}, {11, 22, 24, 25, 26, 27, 29}, {24, 25}, {23, 29}, {24, 25, 28, 29}, {27}, {26, 27, 28, 29}, {9}, {28, 29}, {29}, {9}};
+        int[][] graph = new int[1000][1000];
+        for (int i = 0; i < 100; i++) {
+            graph[i] = new int[1000];
+            for (int j = 0; j < 500; j++) {
+                graph[i][j] = j;
+            }
+        }
         int[][][] graphs = {
+            graph,
             {{1, 2}, {2, 3}, {5}, {0}, {5}, {}, {}},
             {{1, 2, 3, 4}, {1, 2}, {3, 4}, {0, 4}, {}},
             {{}, {0, 2, 3, 4}, {3}, {4}, {}},
@@ -123,18 +186,6 @@ public class FindEventualSafeStates {
             {{17, 21, 22, 27}, {11, 12, 14, 19, 23}, {4, 27}, {16, 18, 20, 27}, {5, 14, 19, 27, 28}, {7, 15, 21, 25, 29}, {7, 10, 18, 28}, {12, 14, 21, 23, 29}, {9, 12, 18, 22, 24}, {19, 21, 25}, {15, 18, 21, 28}, {19, 23, 24, 28}, {13, 19, 21}, {14, 19, 25}, {2, 26, 27}, {}, {}, {3, 23, 24, 25, 26}, {19, 20, 24, 27, 29}, {23, 25}, {11, 22, 24, 25, 26, 27, 29}, {24, 25}, {23, 29}, {24, 25, 28, 29}, {27}, {26, 27, 28, 29}, {}, {28, 29}, {29}, {}},
             {{1, 2, 3, 4, 5, 6}, {}, {}, {}, {}, {}, {6, 5, 4, 3, 2, 1}},
             {{1}, {2}, {3}, {4}, {5}, {6}, {}}};
-//        int[][] graph = {{1}, {2}, {3}, {4}, {5}, {6}, {}};
-        int[][] graph = {{1, 2, 3, 4, 5, 6}, {}, {}, {}, {}, {}, {6, 5, 4, 3, 2, 1}};
-//        int[][] graph = {{1, 2, 3, 4}, {1, 2}, {3, 4}, {0, 4}, {}};
-//        int[][] graph = {{}, {0, 2, 3, 4}, {3}, {4}, {}};
-//        int[][] graph = {{17, 21, 22, 27}, {11, 12, 14, 19, 23}, {4, 27}, {16, 18, 20, 27}, {5, 14, 19, 27, 28}, {7, 15, 21, 25, 29}, {7, 10, 18, 28}, {12, 14, 21, 23, 29}, {9, 12, 18, 22, 24}, {19, 21, 25}, {15, 18, 21, 28}, {19, 23, 24, 28}, {13, 19, 21}, {14, 19, 25}, {2, 26, 27}, {1}, {4}, {3, 23, 24, 25, 26}, {19, 20, 24, 27, 29}, {23, 25}, {11, 22, 24, 25, 26, 27, 29}, {24, 25}, {23, 29}, {24, 25, 28, 29}, {27}, {26, 27, 28, 29}, {9}, {28, 29}, {29}, {9}};
-//        int[][] graph = new int[100][100];
-//        for (int i = 0; i < 100; i++) {
-//            graph[i] = new int[100];
-//            for (int j = 0; j < 100; j++) {
-//                graph[i][j] = j;
-//            }
-//        }
 //        System.out.println(eventualSafeNodes1(graph));
         for (int a = 0; a < 100; a++) {
             long start = System.nanoTime();
@@ -143,7 +194,6 @@ public class FindEventualSafeStates {
                     eventualSafeNodes(g);
                 }
             }
-            var result = eventualSafeNodes(graph);
             long end = System.nanoTime();
             System.out.println((end - start) * 1.0 / 1000000 + " ms");
 
@@ -153,9 +203,18 @@ public class FindEventualSafeStates {
                     eventualSafeNodes1(g);
                 }
             }
-            var result2 = eventualSafeNodes1(graph);
             end = System.nanoTime();
             System.out.println((end - start) * 1.0 / 1000000 + " ms");
+
+            start = System.nanoTime();
+            for (int i = 0; i < 100; i++) {
+                for (var g : graphs) {
+                    eventualSafeNodes2(g);
+                }
+            }
+            end = System.nanoTime();
+            System.out.println((end - start) * 1.0 / 1000000 + " ms");
+
             System.out.println("");
         }
     }

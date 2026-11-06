@@ -15,6 +15,33 @@ public class ShiftingLettersII {
         return new String(c);
     }
 
+    public static String shiftingLetters2(String s, int[][] shifts) {
+        int[] v = new int[s.length()];
+        for (int i = 0; i < s.length(); i++) {
+            v[i] = s.charAt(i) - 'a';
+        }
+        for (int[] shift : shifts) {
+            int start = shift[0];
+            int end = shift[1];
+            int dir = shift[2] == 1 ? 1 : -1;
+            for (int j = start; j <= end; j++) {
+                v[j] += dir;
+            }
+        }
+        StringBuilder sb = new StringBuilder(s.length());
+        int ai = (int) 'a';
+        for (int i = 0; i < v.length; i++) {
+            int a = v[i] % 26;
+            if (a < 0) {
+                sb.append((char) (26 + a + ai));
+            } else {
+                sb.append((char) (a + ai));
+            }
+        }
+
+        return sb.toString();
+    }
+
     public static void main(String[] args) {
         String s = "sadadw";
 //        int[][] shifts = {{0, 4, 0}, {0, 2, 1}, {1, 3, 1}, {0, 4, 1}, {4, 4, 1}, {2, 3, 0}, {5, 5, 0}, {3, 3, 0}, {2, 3, 0}, {5, 5, 1}, {5, 5, 1}, {5, 5, 0}};
@@ -28,12 +55,17 @@ public class ShiftingLettersII {
             sb.append("a");
         }
         s = sb.toString();
+        long start, end;
         for (int i = 0; i < 10; i++) {
-
-            long start = System.nanoTime();
+            start = System.nanoTime();
             String result = shiftingLetters(s, shifts);
-            long end = System.nanoTime();
+            end = System.nanoTime();
             System.out.println((end - start) * 1.0 / 1000000);
+            start = System.nanoTime();
+            String result2 = shiftingLetters2(s, shifts);
+            end = System.nanoTime();
+            System.out.println((end - start) * 1.0 / 1000000);
+            System.out.println(result.equals(result2));
         }
     }
 }

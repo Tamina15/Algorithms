@@ -21,6 +21,24 @@ public class FindTheDifference {
         return ' ';
     }
 
+    public static char findTheDifference2(String s, String t) {
+        int sum = 0;
+        for (int i = 0; i < s.length(); i++) {
+            sum = sum - s.charAt(i) + t.charAt(i);
+        }
+        sum += t.charAt(t.length() - 1);
+        return (char) sum;
+    }
+
+    public static char findTheDifference3(String s, String t) {
+        int x = 0;
+        for (int i = 0; i < s.length(); i++) {
+            x = x ^ s.charAt(i) ^ t.charAt(i);
+        }
+        x ^= t.charAt(t.length() - 1);
+        return (char) x;
+    }
+
     private static String randomString(int length) {
         Random r = new Random();
         byte[] b = new byte[length];
@@ -44,10 +62,29 @@ public class FindTheDifference {
     }
 
     public static void main(String[] args) {
-        String s = randomString(1000);
-        String t = shuffle(s + randomString(1));
-        System.out.println(s);
-        System.out.println(t);
-        System.out.println(findTheDifference(s, t));
+        long start, end;
+//        String s = randomString(1000);
+//        String t = shuffle(s + randomString(1));
+        for (int i = 0; i < 100; i++) {
+            String s = randomString(10000);
+            String t = shuffle(s + randomString(1));
+
+            start = System.nanoTime();
+            findTheDifference(s, t);
+            end = System.nanoTime();
+            System.out.println((end - start) * 1.0 / 1000000);
+
+            start = System.nanoTime();
+            findTheDifference2(s, t);
+            end = System.nanoTime();
+            System.out.println((end - start) * 1.0 / 1000000);
+
+            start = System.nanoTime();
+            findTheDifference3(s, t);
+            end = System.nanoTime();
+            System.out.println((end - start) * 1.0 / 1000000);
+
+            System.out.println("");
+        }
     }
 }

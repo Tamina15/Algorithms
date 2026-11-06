@@ -62,7 +62,50 @@ public class PrimePairsWithTargetSum {
         return list;
     }
 
+    public static List<List<Integer>> findPrimePairs2(int n) {
+        // Eratosthenes Seive
+        int[] result = new int[n];
+        int count = 0;
+        boolean[] composite = new boolean[n + 1];
+        composite[0] = composite[1] = true;
+        for (int p = 2; p * p <= n; p++) {
+            if (!composite[p]) {
+                for (int multiple = p * p; multiple <= n; multiple += p) {
+                    composite[multiple] = true;
+                }
+            }
+        }
+        for (int i = 0; i < composite.length; i++) {
+            if (!composite[i]) {
+                result[count++] = i;
+            }
+        }
+        List<List<Integer>> list = new ArrayList<>();
+        int left = 0, right = count - 1;
+        // Two Sum
+        while (left <= right) {
+            int sum = result[left] + result[right];
+            if (sum == n) {
+                list.add(List.of(result[left], result[right]));
+                left++;
+                while (left < right && result[left] == result[left - 1]) {
+                    left++;
+                }
+                continue;
+            }
+            if (sum < n) {
+                left++;
+            } else {
+                right--;
+            }
+        }
+        return list;
+    }
+
     public static void main(String[] args) {
-        System.out.println(findPrimePairs(2));
+        int n = 10;
+        System.out.println(findPrimePairs(n));
+        System.out.println(findPrimePairs2(n + 1));
+        System.out.println(findPrimePairs(n).equals(findPrimePairs2(n + 1)));
     }
 }
